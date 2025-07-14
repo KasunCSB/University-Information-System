@@ -7,24 +7,35 @@ import { useState, useEffect } from 'react'
 
 // Dynamically import Lottie to avoid SSR issues
 const Lottie = dynamic(() => import('lottie-react'), {
-  ssr: false,
-  loading: () => (
-    <div className="w-64 h-64 bg-gray-100 dark:bg-gray-800 rounded-lg animate-pulse flex items-center justify-center">
-      <div className="text-gray-400 dark:text-gray-600">Loading...</div>
-    </div>
-  )
+  ssr: false
 })
 
 export default function NotFound() {
   const [animationData, setAnimationData] = useState(null)
+  const [showContent, setShowContent] = useState(false)
 
   useEffect(() => {
-    // Load animation data on client side
-    fetch('/lottie/not-found.json')
-      .then(response => response.json())
-      .then(data => setAnimationData(data))
-      .catch(error => console.error('Error loading animation:', error))
+    // Preload both Lottie component and animation data simultaneously
+    Promise.all([
+      import('lottie-react'),
+      fetch('/lottie/not-found.json').then(res => res.json())
+    ]).then(([, data]) => {
+      setAnimationData(data)
+      // Small delay to ensure smooth rendering
+      requestAnimationFrame(() => {
+        setShowContent(true)
+      })
+    }).catch(error => {
+      console.error('Error loading resources:', error)
+      // Show content even if animation fails
+      setShowContent(true)
+    })
   }, [])
+
+  // Return nothing until everything is ready
+  if (!showContent) {
+    return null
+  }
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
@@ -35,18 +46,12 @@ export default function NotFound() {
           {/* Lottie Animation */}
           <div className="mb-8 flex justify-center">
             <div className="w-64 h-64">
-              {animationData ? (
-                <Lottie
-                  animationData={animationData}
-                  loop={true}
-                  autoplay={true}
-                  style={{ width: '100%', height: '100%' }}
-                />
-              ) : (
-                <div className="w-full h-full bg-gray-100 dark:bg-gray-800 rounded-lg animate-pulse flex items-center justify-center">
-                  <div className="text-gray-400 dark:text-gray-600">Loading animation...</div>
-                </div>
-              )}
+              <Lottie
+                animationData={animationData}
+                loop={true}
+                autoplay={true}
+                style={{ width: '100%', height: '100%' }}
+              />
             </div>
           </div>
 
