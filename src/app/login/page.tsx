@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import Header from '@/components/Header'
 
 export default function LoginPage() {
@@ -44,6 +45,20 @@ export default function LoginPage() {
         {/* Login Form */}
         <div className="bg-white dark:bg-gray-800 py-8 px-6 sm:px-8 shadow-xl rounded-2xl border border-gray-100 dark:border-gray-700">
           <form className="space-y-6" onSubmit={handleSubmit}>
+            {/* Login Avatar */}
+            <div className="flex justify-center mb-6">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-4 border-gray-100 dark:border-gray-600 shadow-lg">
+                <Image
+                  src="/images/login-avatar.png"
+                  alt="Login Avatar"
+                  width={96}
+                  height={96}
+                  className="w-full h-full object-cover"
+                  priority
+                />
+              </div>
+            </div>
+
             {/* Username Field */}
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -95,7 +110,7 @@ export default function LoginPage() {
               </div>
 
               <Link
-                href="/forgot-password"
+                href="/reset-password"
                 className="text-sm text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
               >
                 Forgot password?
