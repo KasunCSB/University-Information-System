@@ -75,12 +75,12 @@ export default function EmailVerificationPage() {
                 <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                   <p className="text-sm text-blue-800 dark:text-blue-400">
                     <strong>Check your inbox:</strong> The email may take a few minutes to arrive. 
-                    Don't forget to check your spam folder.
+                    Don&apos;t forget to check your spam folder.
                   </p>
                 </div>
 
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Didn't receive the email?
+                  Didn&apos;t receive the email?
                 </p>
 
                 {/* Resend Button */}
@@ -107,7 +107,15 @@ export default function EmailVerificationPage() {
 
           {/* Additional Actions */}
           <div className="text-center space-y-4">
-        
+            {/* Trouble with email verification */}
+            <div>
+              <Link
+                href="/forgot-password"
+                className="text-sm text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+              >
+                Trouble with email verification? Reset password instead
+              </Link>
+            </div>
 
             {/* Back to Home */}
             <div>
