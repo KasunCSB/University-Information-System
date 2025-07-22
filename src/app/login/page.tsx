@@ -3,20 +3,18 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import Header from '@/components/Header'
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
     username: '',
     password: '',
-    rememberMe: false
   })
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target
+    const { name, value } = e.target
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: value
     }))
   }
 
@@ -27,37 +25,75 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
-      <Header />
-      
-      <div className="flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-        <div className="max-w-md w-full space-y-8">
-        {/* Header */}
-        <div className="text-center">          
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-2">
-            Welcome to UIS
-          </h1>
-          <p className="text-gray-600 dark:text-gray-300 text-base sm:text-lg">
-            Login to your account using username & password
-          </p>
-        </div>
+    <div className="min-h-screen bg-[url('/images/campus-bg.jpg')] bg-cover bg-center bg-no-repeat flex items-center justify-center">
+      <div className="w-[420px] h-[480px] bg-white/95 dark:bg-gray-800/95 rounded-xl shadow-2xl backdrop-blur-sm">
+        <div className="w-full h-full flex flex-col items-center justify-start px-8 py-10">
+          {/* University Logo and Name */}
+          <div className="mb-8 text-center">
+            <h1 className="text-2xl font-serif font-bold text-gray-900 dark:text-white">
+              University Information System
+            </h1>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+              Welcome back! Please login to your account.
+            </p>
+          </div>
 
-        {/* Login Form */}
-        <div className="bg-white dark:bg-gray-800 py-8 px-6 sm:px-8 shadow-xl rounded-2xl border border-gray-100 dark:border-gray-700">
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            {/* Login Avatar */}
-            <div className="flex justify-center mb-6">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-4 border-gray-100 dark:border-gray-600 shadow-lg">
-                <Image
-                  src="/images/login-avatar.png"
-                  alt="Login Avatar"
-                  width={96}
-                  height={96}
-                  className="w-full h-full object-cover"
-                  priority
-                />
-              </div>
+          {/* Login Form */}
+          <form className="w-full space-y-5" onSubmit={handleSubmit}>
+            {/* Username Input */}
+            <div>
+              <input
+                id="username"
+                name="username"
+                type="text"
+                required
+                value={formData.username}
+                onChange={handleInputChange}
+                className="w-[350px] h-[45px] px-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 text-gray-900 dark:text-white dark:placeholder-gray-400 transition-colors mx-auto block"
+                placeholder="Username"
+              />
             </div>
+
+            {/* Password Input */}
+            <div>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                required
+                value={formData.password}
+                onChange={handleInputChange}
+                className="w-[350px] h-[45px] px-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 text-gray-900 dark:text-white dark:placeholder-gray-400 transition-colors mx-auto block"
+                placeholder="Password"
+              />
+            </div>
+
+            {/* Login Button */}
+            <button
+              type="submit"
+              className="w-[350px] h-[50px] bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors duration-200 mx-auto block"
+            >
+              Log in
+            </button>
+
+            {/* Additional Links */}
+            <div className="flex flex-col items-center space-y-3 mt-4 text-sm">
+              <Link href="/forgot-password" className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
+                Lost password?
+              </Link>
+              <div className="flex items-center space-x-2">
+                <span className="text-gray-600 dark:text-gray-400">Language:</span>
+                <button type="button" className="text-gray-900 dark:text-white hover:underline">English</button>
+              </div>
+              <button type="button" className="text-gray-600 dark:text-gray-400 hover:underline text-xs">
+                Cookies notice
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  )
 
             {/* Username Field */}
             <div>
