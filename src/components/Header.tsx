@@ -29,6 +29,9 @@ export default function Header() {
             <Link href="/" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
               Home
             </Link>
+            <Link href="/courses" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              Courses
+            </Link>
             <Link href="/university-info" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
               Universities
             </Link>
@@ -89,6 +92,13 @@ export default function Header() {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Home
+              </Link>
+              <Link 
+                href="/courses" 
+                className="block px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Courses
               </Link>
               <Link 
                 href="/university-info" 
