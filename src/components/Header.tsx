@@ -49,18 +49,41 @@ export default function Header() {
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center space-x-4">
             <ThemeToggle />
-            <Link 
-              href="/login"
-              className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-            >
-              Sign In
-            </Link>
-            <Link 
-              href="/signup"
-              className="btn-primary text-sm"
-            >
-              Get Started
-            </Link>
+            {/* Check if user is authenticated */}
+            {typeof window !== 'undefined' && localStorage.getItem('isAuthenticated') ? (
+              <>
+                <Link 
+                  href="/dashboard"
+                  className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                >
+                  Dashboard
+                </Link>
+                <button 
+                  onClick={() => {
+                    localStorage.clear()
+                    window.location.href = '/login'
+                  }}
+                  className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <Link 
+                  href="/login"
+                  className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                >
+                  Sign In
+                </Link>
+                <Link 
+                  href="/signup"
+                  className="btn-primary text-sm"
+                >
+                  Get Started
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile menu button and theme toggle */}
@@ -129,20 +152,45 @@ export default function Header() {
                 Contact
               </Link>
               <div className="pt-2 border-t border-gray-200 dark:border-gray-700 mt-2 space-y-1">
-                <Link 
-                  href="/login" 
-                  className="block px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Sign In
-                </Link>
-                <Link 
-                  href="/signup" 
-                  className="block mx-3 my-2 text-center btn-primary"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Get Started
-                </Link>
+                {/* Check if user is authenticated for mobile menu */}
+                {typeof window !== 'undefined' && localStorage.getItem('isAuthenticated') ? (
+                  <>
+                    <Link 
+                      href="/dashboard" 
+                      className="block px-3 py-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors font-medium"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Dashboard
+                    </Link>
+                    <button 
+                      onClick={() => {
+                        localStorage.clear()
+                        window.location.href = '/login'
+                        setMobileMenuOpen(false)
+                      }}
+                      className="block w-full text-left px-3 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors"
+                    >
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link 
+                      href="/login" 
+                      className="block px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Sign In
+                    </Link>
+                    <Link 
+                      href="/signup" 
+                      className="block mx-3 my-2 text-center btn-primary"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Get Started
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </div>
