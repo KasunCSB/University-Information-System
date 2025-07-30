@@ -22,8 +22,22 @@ export default function LoginPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    // Handle login logic here
-    console.log('Login attempt:', formData)
+    // Simple authentication simulation
+    if (formData.username && formData.password) {
+      localStorage.setItem('isAuthenticated', 'true')
+      localStorage.setItem('user', formData.username)
+      
+      // Temporary admin access - check for admin credentials
+      if (formData.username.toLowerCase() === 'admin' && formData.password === 'admin123') {
+        localStorage.setItem('userRole', 'admin')
+        window.location.href = '/admin'
+      } else {
+        localStorage.setItem('userRole', 'student')
+        window.location.href = '/dashboard'
+      }
+    } else {
+      alert('Please enter both username and password')
+    }
   }
 
   return (
