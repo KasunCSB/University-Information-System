@@ -1,14 +1,13 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Message, ChatRoom, User, CreateRoomData, WebSocketMessage } from '../types';
+import { Message, ChatRoom, User, CreateRoomData } from '../types';
 
 export function useWebSocket(currentUser: User) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [rooms, setRooms] = useState<ChatRoom[]>([]);
   const [onlineUsers, setOnlineUsers] = useState<User[]>([]);
   const [isConnected, setIsConnected] = useState(false);
-  const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Initialize default rooms
@@ -129,9 +128,7 @@ export function useWebSocket(currentUser: User) {
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
       }
-      if (wsRef.current) {
-        wsRef.current.close();
-      }
+      // Note: In a real implementation, you would close the WebSocket connection here
     };
   }, []);
 

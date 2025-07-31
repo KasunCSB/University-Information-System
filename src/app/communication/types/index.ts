@@ -52,7 +52,7 @@ export interface CreateRoomData {
 
 export interface WebSocketMessage {
   type: 'message' | 'user_joined' | 'user_left' | 'room_created' | 'typing' | 'online_users';
-  data: any;
+  data: Message | User | ChatRoom | TypingIndicator | User[];
 }
 
 export interface TypingIndicator {

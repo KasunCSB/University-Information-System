@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { Message } from '../types';
 
 interface MessageBubbleProps {
@@ -55,10 +56,13 @@ export function MessageBubble({ message, isOwn, showAvatar, showTimestamp }: Mes
       case 'image':
         return (
           <div>
-            <img 
+            <Image 
               src={message.content} 
               alt="Shared image" 
               className="max-w-xs rounded-lg"
+              width={300}
+              height={200}
+              style={{ objectFit: 'cover' }}
             />
           </div>
         );

@@ -83,6 +83,91 @@ const courses = [
   },
 ]
 
+// Mock data for additional dashboard features
+const announcements = [
+  {
+    id: 1,
+    title: 'Final Exam Schedule Released',
+    content: 'The final examination schedule for this semester has been published. Please check your student portal.',
+    type: 'important',
+    date: '2025-07-30',
+    author: 'Academic Office'
+  },
+  {
+    id: 2,
+    title: 'Library Extended Hours',
+    content: 'Library will be open 24/7 during exam period starting next week.',
+    type: 'info',
+    date: '2025-07-29',
+    author: 'Library Services'
+  },
+  {
+    id: 3,
+    title: 'Career Fair 2025',
+    content: 'Annual career fair will be held on August 15th. Register now for job opportunities.',
+    type: 'event',
+    date: '2025-07-28',
+    author: 'Career Services'
+  }
+]
+
+const upcomingDeadlines = [
+  {
+    id: 1,
+    title: 'CS101 Assignment 3',
+    dueDate: '2025-08-05',
+    course: 'Computer Science Fundamentals',
+    type: 'assignment',
+    priority: 'high'
+  },
+  {
+    id: 2,
+    title: 'MATH201 Midterm Exam',
+    dueDate: '2025-08-08',
+    course: 'Advanced Mathematics',
+    type: 'exam',
+    priority: 'high'
+  },
+  {
+    id: 3,
+    title: 'EE202 Lab Report',
+    dueDate: '2025-08-10',
+    course: 'Electronics Engineering',
+    type: 'report',
+    priority: 'medium'
+  }
+]
+
+const recentGrades = [
+  {
+    id: 1,
+    course: 'Web Development',
+    assignment: 'Project 2',
+    grade: 'A',
+    points: 95,
+    maxPoints: 100,
+    date: '2025-07-28'
+  },
+  {
+    id: 2,
+    course: 'Data Structures & Algorithms',
+    assignment: 'Quiz 3',
+    grade: 'B+',
+    points: 87,
+    maxPoints: 100,
+    date: '2025-07-26'
+  },
+  {
+    id: 3,
+    course: 'Computer Science Fundamentals',
+    assignment: 'Assignment 2',
+    grade: 'A-',
+    points: 92,
+    maxPoints: 100,
+    date: '2025-07-24'
+  }
+]
+
 const courseCategories = ['All', 'Computer Science', 'Mathematics', 'Engineering']
 const sortOptions = [
   { value: 'last_accessed', label: 'Last accessed' },
@@ -140,6 +225,20 @@ export default function DashboardPage() {
     return 'bg-red-500'
   }
 
+  const getDaysUntilDeadline = (dueDate: string) => {
+    const today = new Date()
+    const deadline = new Date(dueDate)
+    const diffTime = deadline.getTime() - today.getTime()
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    return diffDays
+  }
+
+  const getOverallGPA = () => {
+    const totalPoints = recentGrades.reduce((acc, grade) => acc + grade.points, 0)
+    const maxTotalPoints = recentGrades.reduce((acc, grade) => acc + grade.maxPoints, 0)
+    return ((totalPoints / maxTotalPoints) * 4.0).toFixed(2)
+  }
+
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
       {/* Navigation */}
@@ -157,7 +256,7 @@ export default function DashboardPage() {
             </p>
             
             {/* Statistics Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 max-w-4xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 sm:gap-6 max-w-5xl mx-auto">
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 sm:p-6 hover:bg-white/15 transition-all duration-300">
                 <div className="text-2xl sm:text-3xl font-bold text-white mb-1">{courses.length}</div>
                 <div className="text-blue-100 text-sm sm:text-base font-medium">Enrolled Courses</div>
@@ -173,6 +272,12 @@ export default function DashboardPage() {
                   {courses.filter(course => course.progress >= 80).length}
                 </div>
                 <div className="text-blue-100 text-sm sm:text-base font-medium">Near Completion</div>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 sm:p-6 hover:bg-white/15 transition-all duration-300">
+                <div className="text-2xl sm:text-3xl font-bold text-white mb-1">
+                  {getOverallGPA()}
+                </div>
+                <div className="text-blue-100 text-sm sm:text-base font-medium">Current GPA</div>
               </div>
             </div>
           </div>
@@ -211,36 +316,204 @@ export default function DashboardPage() {
               </div>
             </Link>
             
-            <Link href="/university-info" className="group">
+                        <button 
+              className="group w-full" 
+              onClick={() => {
+                // Scroll to courses section
+                const coursesSection = document.querySelector('[data-section="courses"]')
+                if (coursesSection) {
+                  coursesSection.scrollIntoView({ behavior: 'smooth' })
+                } else {
+                  // Fallback: scroll to courses
+                  window.scrollTo({ top: 600, behavior: 'smooth' })
+                }
+              }}
+            >
               <div className="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-4 text-center hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors">
                 <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center mx-auto mb-2">
                   <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
                   </svg>
                 </div>
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-purple-600 dark:group-hover:text-purple-400">
-                  Universities
+                  Grades
                 </span>
               </div>
-            </Link>
+            </button>
             
-            <button className="group" onClick={() => setSearchQuery('assignment')}>
+            <Link href="/assignments" className="group">
               <div className="bg-orange-50 dark:bg-orange-900/20 rounded-xl p-4 text-center hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors">
-                <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center mx-auto mb-2">
+                <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center mx-auto mb-2 relative">
                   <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                   </svg>
+                  {/* Notification badge */}
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {upcomingDeadlines.filter(d => getDaysUntilDeadline(d.dueDate) <= 3).length}
+                  </span>
                 </div>
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-orange-600 dark:group-hover:text-orange-400">
                   Assignments
                 </span>
               </div>
-            </button>
+            </Link>
+          </div>
+        </div>
+
+        {/* Dashboard Grid Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 mb-6 sm:mb-8">
+          {/* Left Column - Announcements */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Announcements Section */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Latest Announcements</h3>
+                <Link href="/communication" className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium">
+                  View All
+                </Link>
+              </div>
+              <div className="space-y-4">
+                {announcements.slice(0, 3).map((announcement) => (
+                  <div key={announcement.id} className="border-l-4 border-blue-500 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-r-lg">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h4 className="font-medium text-gray-900 dark:text-white mb-1">{announcement.title}</h4>
+                        <p className="text-gray-600 dark:text-gray-300 text-sm mb-2">{announcement.content}</p>
+                        <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
+                          <span>{announcement.author}</span>
+                          <span className="mx-2">•</span>
+                          <span>{new Date(announcement.date).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        announcement.type === 'important' 
+                          ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                          : announcement.type === 'event'
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                          : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                      }`}>
+                        {announcement.type}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Recent Grades Section */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Recent Grades</h3>
+                <button className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium">
+                  View All Grades
+                </button>
+              </div>
+              <div className="space-y-3">
+                {recentGrades.map((grade) => (
+                  <div key={grade.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div className="flex-1">
+                      <h4 className="font-medium text-gray-900 dark:text-white text-sm">{grade.assignment}</h4>
+                      <p className="text-gray-600 dark:text-gray-300 text-xs">{grade.course}</p>
+                    </div>
+                    <div className="text-right">
+                      <div className="flex items-center space-x-2">
+                        <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                          grade.points >= 90 
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                            : grade.points >= 80
+                            ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                            : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                        }`}>
+                          {grade.grade}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        {grade.points}/{grade.maxPoints}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column - Deadlines & Calendar */}
+          <div className="space-y-6">
+            {/* Upcoming Deadlines */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Upcoming Deadlines</h3>
+              <div className="space-y-3">
+                {upcomingDeadlines.map((deadline) => (
+                  <div key={deadline.id} className="flex items-start space-x-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div className={`w-3 h-3 rounded-full mt-1 flex-shrink-0 ${
+                      deadline.priority === 'high' 
+                        ? 'bg-red-500' 
+                        : deadline.priority === 'medium'
+                        ? 'bg-yellow-500'
+                        : 'bg-green-500'
+                    }`}></div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-medium text-gray-900 dark:text-white text-sm truncate">{deadline.title}</h4>
+                      <p className="text-gray-600 dark:text-gray-300 text-xs truncate">{deadline.course}</p>
+                      <div className="flex items-center space-x-2 mt-1">
+                        <span className={`px-2 py-0.5 rounded text-xs ${
+                          deadline.type === 'exam'
+                            ? 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200'
+                            : deadline.type === 'assignment'
+                            ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200'
+                            : 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-200'
+                        }`}>
+                          {deadline.type}
+                        </span>
+                        <span className={`text-xs font-medium ${
+                          getDaysUntilDeadline(deadline.dueDate) <= 1
+                            ? 'text-red-600 dark:text-red-400'
+                            : getDaysUntilDeadline(deadline.dueDate) <= 3
+                            ? 'text-yellow-600 dark:text-yellow-400'
+                            : 'text-gray-500 dark:text-gray-400'
+                        }`}>
+                          {getDaysUntilDeadline(deadline.dueDate) === 0 
+                            ? 'Due today' 
+                            : getDaysUntilDeadline(deadline.dueDate) === 1
+                            ? 'Due tomorrow'
+                            : `${getDaysUntilDeadline(deadline.dueDate)} days left`
+                          }
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Quick Calendar View */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">This Week</h3>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between py-2 border-b border-gray-200 dark:border-gray-600">
+                  <span className="text-sm text-gray-600 dark:text-gray-300">Monday</span>
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">CS101 Lecture</span>
+                </div>
+                <div className="flex items-center justify-between py-2 border-b border-gray-200 dark:border-gray-600">
+                  <span className="text-sm text-gray-600 dark:text-gray-300">Wednesday</span>
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">MATH201 Lab</span>
+                </div>
+                <div className="flex items-center justify-between py-2 border-b border-gray-200 dark:border-gray-600">
+                  <span className="text-sm text-gray-600 dark:text-gray-300">Friday</span>
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">EE202 Project</span>
+                </div>
+                <div className="mt-4">
+                  <Link href="/courses" className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium">
+                    View Full Schedule →
+                  </Link>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Section Header */}
-        <div className="mb-6 sm:mb-8">
+        <div className="mb-6 sm:mb-8" data-section="courses">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5">
             <div>
               <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
