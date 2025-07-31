@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import AuthenticatedHeader from '@/components/AuthenticatedHeader'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { formatDateFriendly } from '@/lib/dateUtils'
+import { safeGetFromStorage, safeSetToStorage } from '@/lib/storageUtils'
 
 interface UploadStats {
   fileName: string
@@ -23,6 +25,7 @@ interface SystemStatus {
 
 export default function AdminPage() {
   const router = useRouter()
+  const [mounted, setMounted] = useState(false)
   const [isDemoMode, setIsDemoMode] = useState(false)
   const [uploadStats, setUploadStats] = useState<UploadStats[]>([])
   const [systemStatus, setSystemStatus] = useState<SystemStatus>({
@@ -36,23 +39,29 @@ export default function AdminPage() {
   const [selectedFileType, setSelectedFileType] = useState('students')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   // Check admin authentication
   useEffect(() => {
-    const userRole = localStorage.getItem('userRole')
-    if (userRole !== 'admin') {
+    const userRoleResult = safeGetFromStorage<string>('userRole')
+    if (!userRoleResult.success || userRoleResult.data !== 'admin') {
       router.push('/dashboard')
       return
     }
 
     // Load saved demo mode preference
-    const savedDemoMode = localStorage.getItem('adminDemoMode') === 'true'
+    const savedDemoModeResult = safeGetFromStorage<string>('adminDemoMode')
+    const savedDemoMode = savedDemoModeResult.success && savedDemoModeResult.data === 'true'
     setIsDemoMode(savedDemoMode)
 
     // Generate client-side encryption key on first load
-    if (!localStorage.getItem('clientEncryptionKey')) {
+    const existingKeyResult = safeGetFromStorage<string>('clientEncryptionKey')
+    if (!existingKeyResult.success) {
       generateEncryptionKey()
     } else {
-      setEncryptionKey(localStorage.getItem('clientEncryptionKey') || '')
+      setEncryptionKey(existingKeyResult.data || '')
     }
   }, [router])
 
@@ -62,7 +71,7 @@ export default function AdminPage() {
       const key = crypto.getRandomValues(new Uint8Array(32))
       const keyHex = Array.from(key, byte => byte.toString(16).padStart(2, '0')).join('')
       setEncryptionKey(keyHex)
-      localStorage.setItem('clientEncryptionKey', keyHex)
+      safeSetToStorage('clientEncryptionKey', keyHex)
     } catch (error) {
       console.error('Failed to generate encryption key:', error)
     }
@@ -71,7 +80,7 @@ export default function AdminPage() {
   const handleModeToggle = () => {
     const newMode = !isDemoMode
     setIsDemoMode(newMode)
-    localStorage.setItem('adminDemoMode', newMode.toString())
+    safeSetToStorage('adminDemoMode', newMode.toString())
     
     if (newMode) {
       // Demo mode activated - show warning
@@ -81,8 +90,17 @@ export default function AdminPage() {
 
   const encryptData = async (data: string, key: string): Promise<string> => {
     try {
+      if (!key || key.length !== 64) {
+        throw new Error('Invalid encryption key format')
+      }
+      
       // Convert hex key to Uint8Array
-      const keyBytes = new Uint8Array(key.match(/.{1,2}/g)?.map(byte => parseInt(byte, 16)) || [])
+      const keyMatch = key.match(/.{1,2}/g)
+      if (!keyMatch || keyMatch.length !== 32) {
+        throw new Error('Invalid encryption key length')
+      }
+      
+      const keyBytes = new Uint8Array(keyMatch.map(byte => parseInt(byte, 16)))
       
       // Generate IV
       const iv = crypto.getRandomValues(new Uint8Array(12))
@@ -313,7 +331,7 @@ export default function AdminPage() {
               <div className="text-center">
                 <p className="text-sm text-gray-600 dark:text-gray-400">Last Backup</p>
                 <p className="font-semibold text-gray-900 dark:text-white text-xs">
-                  {systemStatus.lastBackup.toLocaleDateString()}
+                  {mounted ? formatDateFriendly(systemStatus.lastBackup) : '---'}
                 </p>
               </div>
             </div>
@@ -425,7 +443,7 @@ export default function AdminPage() {
                           {upload.fileName}
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
-                          {formatFileSize(upload.fileSize)} • {upload.uploadDate.toLocaleDateString()}
+                          {formatFileSize(upload.fileSize)} • {mounted ? formatDateFriendly(upload.uploadDate) : '---'}
                           {upload.recordCount && ` • ${upload.recordCount} records`}
                         </p>
                       </div>

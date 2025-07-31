@@ -151,9 +151,10 @@ export default function AssignmentsPage() {
 
   const pendingCount = assignments.filter(a => a.status === 'pending').length
   const gradedCount = assignments.filter(a => a.status === 'graded').length
-  const avgGrade = assignments
-    .filter(a => a.points)
-    .reduce((acc, a) => acc + (a.points! / a.maxPoints), 0) / assignments.filter(a => a.points).length * 100
+  const gradedAssignments = assignments.filter(a => a.points)
+  const avgGrade = gradedAssignments.length > 0 
+    ? gradedAssignments.reduce((acc, a) => acc + (a.points! / a.maxPoints), 0) / gradedAssignments.length * 100
+    : 0
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">

@@ -1,11 +1,50 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import ThemeToggle from './ThemeToggle'
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const router = useRouter()
+
+  useEffect(() => {
+    setMounted(true)
+    // Check authentication after mounting to prevent hydration mismatch
+    const authStatus = typeof window !== 'undefined' ? localStorage.getItem('isAuthenticated') === 'true' : false
+    setIsAuthenticated(authStatus)
+  }, [])
+
+  const handleLogout = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.clear()
+    }
+    setIsAuthenticated(false)
+    router.push('/login')
+  }
+
+  // Prevent hydration mismatch by not rendering auth-dependent content until mounted
+  if (!mounted) {
+    return (
+      <header className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
+        <div className="container-responsive">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-blue-600 rounded-full animate-pulse"></div>
+              <div className="w-32 h-6 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+            </div>
+            <div className="flex items-center space-x-4">
+              <ThemeToggle />
+              <div className="w-20 h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+            </div>
+          </div>
+        </div>
+      </header>
+    )
+  }
 
   return (
     <header className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
@@ -50,7 +89,7 @@ export default function Header() {
           <div className="hidden md:flex items-center space-x-4">
             <ThemeToggle />
             {/* Check if user is authenticated */}
-            {typeof window !== 'undefined' && localStorage.getItem('isAuthenticated') ? (
+            {mounted && isAuthenticated ? (
               <>
                 <Link 
                   href="/dashboard"
@@ -59,16 +98,13 @@ export default function Header() {
                   Dashboard
                 </Link>
                 <button 
-                  onClick={() => {
-                    localStorage.clear()
-                    window.location.href = '/login'
-                  }}
+                  onClick={handleLogout}
                   className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                 >
                   Logout
                 </button>
               </>
-            ) : (
+            ) : mounted ? (
               <>
                 <Link 
                   href="/login"
@@ -83,6 +119,8 @@ export default function Header() {
                   Get Started
                 </Link>
               </>
+            ) : (
+              <div className="w-20 h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
             )}
           </div>
 
@@ -153,7 +191,7 @@ export default function Header() {
               </Link>
               <div className="pt-2 border-t border-gray-200 dark:border-gray-700 mt-2 space-y-1">
                 {/* Check if user is authenticated for mobile menu */}
-                {typeof window !== 'undefined' && localStorage.getItem('isAuthenticated') ? (
+                {mounted && isAuthenticated ? (
                   <>
                     <Link 
                       href="/dashboard" 
@@ -164,8 +202,7 @@ export default function Header() {
                     </Link>
                     <button 
                       onClick={() => {
-                        localStorage.clear()
-                        window.location.href = '/login'
+                        handleLogout()
                         setMobileMenuOpen(false)
                       }}
                       className="block w-full text-left px-3 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors"
@@ -173,7 +210,7 @@ export default function Header() {
                       Logout
                     </button>
                   </>
-                ) : (
+                ) : mounted ? (
                   <>
                     <Link 
                       href="/login" 
@@ -190,6 +227,10 @@ export default function Header() {
                       Get Started
                     </Link>
                   </>
+                ) : (
+                  <div className="px-3 py-2">
+                    <div className="w-full h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                  </div>
                 )}
               </div>
             </div>
