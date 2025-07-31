@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ChatSidebar } from './components/ChatSidebar';
 import { ChatWindow } from './components/ChatWindow';
 import { UserRoleSelector } from './components/UserRoleSelector';
@@ -12,12 +12,14 @@ export default function CommunicationPage() {
   const [selectedRoom, setSelectedRoom] = useState<ChatRoom | null>(null);
   const [userRole, setUserRole] = useState<UserRole>('student');
   const [showCreateGroup, setShowCreateGroup] = useState(false);
-  const [currentUser] = useState({
+  
+  // Fix: Create currentUser that updates with userRole changes
+  const currentUser = useMemo(() => ({
     id: '1',
     name: 'John Doe',
     avatar: '/images/login-avatar.png',
     role: userRole
-  });
+  }), [userRole]);
 
   const { 
     messages, 

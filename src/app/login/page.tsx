@@ -1,16 +1,21 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import Header from '@/components/Header'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function LoginPage() {
+  const router = useRouter()
+  const { login, isLoading } = useAuth()
   const [formData, setFormData] = useState({
     username: '',
     password: '',
     rememberMe: false
   })
+  const [error, setError] = useState('')
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target
@@ -20,23 +25,34 @@ export default function LoginPage() {
     }))
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Simple authentication simulation
-    if (formData.username && formData.password) {
-      localStorage.setItem('isAuthenticated', 'true')
-      localStorage.setItem('user', formData.username)
+    setError('')
+    
+    if (!formData.username || !formData.password) {
+      setError('Please enter both username and password')
+      return
+    }
+
+    try {
+      // Use AuthContext login function (accepts any username/password for frontend demo)
+      const success = await login(formData.username, formData.password)
       
-      // Temporary admin access - check for admin credentials
-      if (formData.username.toLowerCase() === 'admin' && formData.password === 'admin123') {
-        localStorage.setItem('userRole', 'admin')
-        window.location.href = '/admin'
+      if (success) {
+        // Check for admin credentials for role-based routing
+        if (formData.username.toLowerCase() === 'admin' && formData.password === 'admin123') {
+          localStorage.setItem('userRole', 'admin')
+          router.push('/admin')
+        } else {
+          localStorage.setItem('userRole', 'student')
+          router.push('/dashboard')
+        }
       } else {
-        localStorage.setItem('userRole', 'student')
-        window.location.href = '/dashboard'
+        setError('Login failed. Please try again.')
       }
-    } else {
-      alert('Please enter both username and password')
+    } catch (error) {
+      console.error('Login error:', error)
+      setError('An error occurred during login. Please try again.')
     }
   }
 
@@ -56,6 +72,16 @@ export default function LoginPage() {
           </p>
         </div>
 
+        {/* Demo Credentials Info */}
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+          <h3 className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">Demo Access:</h3>
+          <div className="text-xs text-blue-700 dark:text-blue-300 space-y-1">
+            <p><strong>Student:</strong> Any username/password combination</p>
+            <p><strong>Admin:</strong> username: <code>admin</code>, password: <code>admin123</code></p>
+            <p><strong>Teacher:</strong> Any username containing &ldquo;teacher&rdquo; or &ldquo;prof&rdquo;</p>
+          </div>
+        </div>
+
         {/* Login Form */}
         <div className="bg-white dark:bg-gray-800 py-8 px-6 sm:px-8 shadow-xl rounded-2xl border border-gray-100 dark:border-gray-700">
           <form className="space-y-6" onSubmit={handleSubmit}>
@@ -72,6 +98,13 @@ export default function LoginPage() {
                 />
               </div>
             </div>
+
+            {/* Error Message */}
+            {error && (
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-200 px-4 py-3 rounded-lg text-sm">
+                {error}
+              </div>
+            )}
 
             {/* Username Field */}
             <div>
@@ -134,9 +167,24 @@ export default function LoginPage() {
             {/* Login Button */}
             <button
               type="submit"
-              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-base font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 transition-all duration-200 transform hover:scale-105"
+              disabled={isLoading}
+              className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-base font-medium text-white transition-all duration-200 ${
+                isLoading 
+                  ? 'bg-gray-400 cursor-not-allowed' 
+                  : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transform hover:scale-105'
+              } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800`}
             >
-              Log In
+              {isLoading ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Signing in...
+                </>
+              ) : (
+                'Log In'
+              )}
             </button>
           </form>
 

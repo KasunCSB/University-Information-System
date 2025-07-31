@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import ThemeToggle from './ThemeToggle'
@@ -13,6 +13,13 @@ interface AuthenticatedHeaderProps {
 export default function AuthenticatedHeader({ username = 'User', currentPage }: AuthenticatedHeaderProps) {
   const router = useRouter()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
+  const [userRole, setUserRole] = useState<string | null>(null)
+
+  useEffect(() => {
+    setMounted(true)
+    setUserRole(localStorage.getItem('userRole'))
+  }, [])
 
   const handleLogout = () => {
     localStorage.clear()
@@ -20,7 +27,6 @@ export default function AuthenticatedHeader({ username = 'User', currentPage }: 
   }
 
   // Check if user is admin and add admin link
-  const userRole = typeof window !== 'undefined' ? localStorage.getItem('userRole') : null
   const navItems = [
     { href: '/', label: 'Home', id: 'home' },
     { href: '/dashboard', label: 'Dashboard', id: 'dashboard' },
@@ -30,6 +36,19 @@ export default function AuthenticatedHeader({ username = 'User', currentPage }: 
     { href: '/university-info', label: 'Universities', id: 'universities' },
     ...(userRole === 'admin' ? [{ href: '/admin', label: 'Admin Panel', id: 'admin' }] : [])
   ]
+
+  if (!mounted) {
+    return (
+      <header className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
+        <div className="container-responsive">
+          <div className="flex justify-between items-center h-16">
+            <div className="w-32 h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+            <div className="w-20 h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+          </div>
+        </div>
+      </header>
+    )
+  }
 
   return (
     <header className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">

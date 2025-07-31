@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation'
 import AuthenticatedHeader from '@/components/AuthenticatedHeader'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { formatDateFriendly } from '@/lib/dateUtils'
+import { useAuth } from '@/contexts/AuthContext'
 
 // Course data with gradient backgrounds instead of images
 const courses = [
@@ -178,23 +180,22 @@ const sortOptions = [
 
 export default function DashboardPage() {
   const router = useRouter()
+  const { user, isAuthenticated, isLoading } = useAuth()
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [category, setCategory] = useState('All')
   const [sortBy, setSortBy] = useState('last_accessed')
   const [searchQuery, setSearchQuery] = useState('')
-  const [username, setUsername] = useState('')
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    const isAuthenticated = localStorage.getItem('isAuthenticated')
-    const user = localStorage.getItem('user')
-    
-    if (!isAuthenticated) {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
       router.push('/login')
-      return
     }
-    
-    setUsername(user || 'User')
-  }, [router])
+  }, [isAuthenticated, isLoading, router])
 
   // Filter and sort courses
   const filteredAndSortedCourses = courses
@@ -239,17 +240,39 @@ export default function DashboardPage() {
     return ((totalPoints / maxTotalPoints) * 4.0).toFixed(2)
   }
 
+  // Show loading state during SSR and initial client render
+  if (!mounted || isLoading) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-gray-900">
+        <AuthenticatedHeader username={user?.name || 'User'} currentPage="Dashboard" />
+        <main className="container-responsive pt-6 pb-12">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded mb-4 w-1/3"></div>
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+              <div className="lg:col-span-3 space-y-6">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-32 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+                ))}
+              </div>
+              <div className="h-96 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+            </div>
+          </div>
+        </main>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
       {/* Navigation */}
-      <AuthenticatedHeader username={username} currentPage="dashboard" />
+      <AuthenticatedHeader username={user?.name || 'User'} currentPage="dashboard" />
 
       {/* Welcome Banner */}
       <div className="bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-700 dark:to-indigo-700">
         <div className="container-responsive py-6 sm:py-8 lg:py-12">
           <div className="text-center">
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-3">
-              Welcome Back, {username}! 👋
+              Welcome Back, {user?.name || 'User'}! 👋
             </h1>
             <p className="text-lg sm:text-xl text-blue-100 mb-6 sm:mb-8 max-w-2xl mx-auto">
               Ready to continue your learning journey? Track your progress and discover new courses.
@@ -382,7 +405,9 @@ export default function DashboardPage() {
                         <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
                           <span>{announcement.author}</span>
                           <span className="mx-2">•</span>
-                          <span>{new Date(announcement.date).toLocaleDateString()}</span>
+                          <span>
+                            {mounted ? formatDateFriendly(announcement.date) : '---'}
+                          </span>
                         </div>
                       </div>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -527,7 +552,7 @@ export default function DashboardPage() {
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <span>Last updated: {new Date().toLocaleDateString()}</span>
+              <span>Last updated: {mounted ? formatDateFriendly(new Date()) : '---'}</span>
             </div>
           </div>
 
@@ -711,7 +736,7 @@ export default function DashboardPage() {
                         </div>
                       )}
                       <span className="text-xs text-gray-500 dark:text-gray-400">
-                        {new Date(course.lastAccessed).toLocaleDateString()}
+                        {mounted ? formatDateFriendly(course.lastAccessed) : '---'}
                       </span>
                     </div>
                   </div>

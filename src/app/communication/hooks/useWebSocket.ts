@@ -98,36 +98,57 @@ export function useWebSocket(currentUser: User) {
 
   // Simulate WebSocket connection (replace with actual WebSocket implementation)
   useEffect(() => {
+    let isMounted = true;
+    let reconnectTimeout: NodeJS.Timeout | null = null;
+
     // In a real implementation, you would connect to your WebSocket server here
     const connectWebSocket = () => {
       try {
         // Simulate connection
-        setIsConnected(true);
-        
-        // Simulate some online users
-        const mockOnlineUsers: User[] = [
-          { id: '1', name: 'Alice Johnson', avatar: '', role: 'student', isOnline: true },
-          { id: '2', name: 'Prof. Smith', avatar: '', role: 'teacher', isOnline: true },
-          { id: '3', name: 'Admin User', avatar: '', role: 'admin', isOnline: true }
-        ];
-        setOnlineUsers(mockOnlineUsers);
+        if (isMounted) {
+          setIsConnected(true);
+          
+          // Simulate some online users
+          const mockOnlineUsers: User[] = [
+            { id: '1', name: 'Alice Johnson', avatar: '', role: 'student', isOnline: true },
+            { id: '2', name: 'Prof. Smith', avatar: '', role: 'teacher', isOnline: true },
+            { id: '3', name: 'Admin User', avatar: '', role: 'admin', isOnline: true }
+          ];
+          setOnlineUsers(mockOnlineUsers);
 
-        console.log('WebSocket connected (simulated)');
+          // Remove console.log for production
+          if (process.env.NODE_ENV === 'development') {
+            console.log('WebSocket connected (simulated)');
+          }
+        }
       } catch (error) {
         console.error('WebSocket connection failed:', error);
-        setIsConnected(false);
-        
-        // Retry connection after 3 seconds
-        reconnectTimeoutRef.current = setTimeout(connectWebSocket, 3000);
+        if (isMounted) {
+          setIsConnected(false);
+          
+          // Retry connection after 3 seconds
+          reconnectTimeout = setTimeout(() => {
+            if (isMounted) {
+              connectWebSocket();
+            }
+          }, 3000);
+          reconnectTimeoutRef.current = reconnectTimeout;
+        }
       }
     };
 
     connectWebSocket();
 
     return () => {
+      isMounted = false;
+      if (reconnectTimeout) {
+        clearTimeout(reconnectTimeout);
+      }
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
       }
+      setIsConnected(false);
       // Note: In a real implementation, you would close the WebSocket connection here
     };
   }, []);
@@ -142,7 +163,9 @@ export function useWebSocket(currentUser: User) {
     setMessages(prev => [...prev, newMessage]);
 
     // In a real implementation, send to WebSocket server
-    console.log('Sending message:', newMessage);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Sending message:', newMessage);
+    }
   }, []);
 
   const createRoom = useCallback((roomData: CreateRoomData) => {
@@ -173,7 +196,9 @@ export function useWebSocket(currentUser: User) {
 
     setMessages(prev => [...prev, systemMessage]);
 
-    console.log('Creating room:', newRoom);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Creating room:', newRoom);
+    }
   }, [currentUser]);
 
   const joinRoom = useCallback((roomId: string) => {

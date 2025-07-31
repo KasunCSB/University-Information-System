@@ -6,18 +6,24 @@ export default function LoadingScreen({ onComplete }: { onComplete: () => void }
   const [progress, setProgress] = useState(0)
 
   useEffect(() => {
-    const interval = setInterval(() => {
+    let interval: NodeJS.Timeout | null = null
+    let timeout: NodeJS.Timeout | null = null
+
+    interval = setInterval(() => {
       setProgress(prev => {
         if (prev >= 100) {
-          clearInterval(interval)
-          setTimeout(() => onComplete(), 500)
+          if (interval) clearInterval(interval)
+          timeout = setTimeout(() => onComplete(), 500)
           return 100
         }
         return prev + Math.random() * 15
       })
     }, 100)
 
-    return () => clearInterval(interval)
+    return () => {
+      if (interval) clearInterval(interval)
+      if (timeout) clearTimeout(timeout)
+    }
   }, [onComplete])
 
   return (

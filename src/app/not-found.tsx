@@ -11,7 +11,7 @@ const Lottie = dynamic(() => import('lottie-react'), {
 })
 
 export default function NotFound() {
-  const [animationData, setAnimationData] = useState(null)
+  const [animationData, setAnimationData] = useState<object | null>(null)
   const [showContent, setShowContent] = useState(false)
 
   useEffect(() => {

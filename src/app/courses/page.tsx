@@ -26,8 +26,15 @@ export default function CoursesPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+    
     // Simulate API call
     setTimeout(() => {
       setCourses([
@@ -73,7 +80,7 @@ export default function CoursesPage() {
       ]);
       setLoading(false);
     }, 1000);
-  }, []);
+  }, [mounted]);
 
   const filteredCourses = courses.filter(course =>
     course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -190,7 +197,10 @@ export default function CoursesPage() {
                 <div>
                   <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Avg. Enrollment</p>
                   <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {courses.length > 0 ? Math.round(courses.reduce((sum, course) => sum + (course.enrolledStudents / course.maxStudents * 100), 0) / courses.length) : 0}%
+                    {courses.length > 0 ? Math.round(courses.reduce((sum, course) => {
+                      const enrollmentRate = course.maxStudents > 0 ? (course.enrolledStudents / course.maxStudents * 100) : 0
+                      return sum + enrollmentRate
+                    }, 0) / courses.length) : 0}%
                   </p>
                 </div>
               </div>
