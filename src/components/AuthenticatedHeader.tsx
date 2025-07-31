@@ -25,6 +25,7 @@ export default function AuthenticatedHeader({ username = 'User', currentPage }: 
     { href: '/', label: 'Home', id: 'home' },
     { href: '/dashboard', label: 'Dashboard', id: 'dashboard' },
     { href: '/courses', label: 'My Courses', id: 'courses' },
+    { href: '/assignments', label: 'Assignments', id: 'assignments' },
     { href: '/communication', label: 'Communication', id: 'communication' },
     { href: '/university-info', label: 'Universities', id: 'universities' },
     ...(userRole === 'admin' ? [{ href: '/admin', label: 'Admin Panel', id: 'admin' }] : [])

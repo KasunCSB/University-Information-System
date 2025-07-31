@@ -6,7 +6,7 @@ import { ChatWindow } from './components/ChatWindow';
 import { UserRoleSelector } from './components/UserRoleSelector';
 import { CreateGroupModal } from './components/CreateGroupModal';
 import { useWebSocket } from './hooks/useWebSocket';
-import { UserRole, ChatRoom, Message } from './types';
+import { UserRole, ChatRoom } from './types';
 
 export default function CommunicationPage() {
   const [selectedRoom, setSelectedRoom] = useState<ChatRoom | null>(null);
@@ -93,7 +93,6 @@ export default function CommunicationPage() {
           selectedRoom={selectedRoom}
           onRoomSelect={handleRoomSelect}
           onCreateGroup={() => setShowCreateGroup(true)}
-          userRole={userRole}
           onlineUsers={onlineUsers}
         />
       </div>

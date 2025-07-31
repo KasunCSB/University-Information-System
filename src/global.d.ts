@@ -1,18 +1,15 @@
-/// <reference types="react" />
-/// <reference types="react-dom" />
-
-import { ReactNode } from 'react';
+import { CSSProperties } from 'react';
 
 declare global {
   namespace JSX {
     interface IntrinsicElements {
-      [elemName: string]: any;
+      [elemName: string]: React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement>;
     }
   }
 }
 
 declare module 'react' {
   interface HTMLAttributes<T> extends AriaAttributes, DOMAttributes<T> {
-    css?: any;
+    css?: CSSProperties;
   }
 }
