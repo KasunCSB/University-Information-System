@@ -8,7 +8,6 @@ interface ChatSidebarProps {
   selectedRoom: ChatRoom | null;
   onRoomSelect: (room: ChatRoom) => void;
   onCreateGroup: () => void;
-  userRole: UserRole;
   onlineUsers: User[];
 }
 
@@ -17,7 +16,6 @@ export function ChatSidebar({
   selectedRoom, 
   onRoomSelect, 
   onCreateGroup, 
-  userRole,
   onlineUsers 
 }: ChatSidebarProps) {
   const [activeTab, setActiveTab] = useState<'rooms' | 'users'>('rooms');

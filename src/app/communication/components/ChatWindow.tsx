@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { ChatRoom, Message, User } from '../types';
 import { MessageInput } from './MessageInput';
 import { MessageBubble } from './MessageBubble';
@@ -20,7 +20,6 @@ export function ChatWindow({
   onSendMessage, 
   onlineUsers 
 }: ChatWindowProps) {
-  const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
@@ -53,22 +52,6 @@ export function ChatWindow({
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
           </svg>
         );
-    }
-  };
-
-  const formatDate = (date: Date) => {
-    const now = new Date();
-    const messageDate = new Date(date);
-    
-    if (messageDate.toDateString() === now.toDateString()) {
-      return messageDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    } else {
-      return messageDate.toLocaleDateString([], { 
-        month: 'short', 
-        day: 'numeric',
-        hour: '2-digit', 
-        minute: '2-digit' 
-      });
     }
   };
 
@@ -172,7 +155,6 @@ export function ChatWindow({
             {/* Messages for this date */}
             {dayMessages.map((message, index) => (
               <MessageBubble
-                // @ts-ignore - React key prop issue with strict typing
                 key={message.id || `msg-${index}`}
                 message={message}
                 isOwn={message.user.id === currentUser.id}
@@ -190,18 +172,6 @@ export function ChatWindow({
             ))}
           </div>
         ))}
-
-        {/* Typing Indicator */}
-        {isTyping && (
-          <div className="flex items-center space-x-2 text-gray-500 dark:text-gray-400">
-            <div className="flex space-x-1">
-              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-            </div>
-            <span className="text-sm">Someone is typing...</span>
-          </div>
-        )}
 
         <div ref={messagesEndRef} />
       </div>

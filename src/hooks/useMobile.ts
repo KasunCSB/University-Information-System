@@ -1,13 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
 export function useMobileMenu() {
   const [isOpen, setIsOpen] = useState(false)
 
-  const toggle = () => setIsOpen(!isOpen)
-  const close = () => setIsOpen(false)
-  const open = () => setIsOpen(true)
+  const toggle = useCallback(() => setIsOpen(prev => !prev), [])
+  const close = useCallback(() => setIsOpen(false), [])
+  const open = useCallback(() => setIsOpen(true), [])
 
   // Close menu on escape key
   useEffect(() => {
@@ -29,7 +29,7 @@ export function useMobileMenu() {
       document.removeEventListener('keydown', handleEscape)
       document.body.style.overflow = 'unset'
     }
-  }, [isOpen])
+  }, [isOpen, close])
 
   // Close menu on window resize to desktop size
   useEffect(() => {
@@ -41,7 +41,7 @@ export function useMobileMenu() {
 
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
-  }, [isOpen])
+  }, [isOpen, close]) // Add close to dependency array
 
   return {
     isOpen,

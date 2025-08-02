@@ -7,7 +7,7 @@ import { Input } from "../../../../components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../../../../components/ui/card";
 import { Badge } from "../../../../components/ui/badge";
 import { Textarea } from "../../../../components/ui/textarea";
-import { Plus, Search, Edit, Trash2, Upload, Calendar, Clock, FileText, ArrowLeft, Download } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Calendar, FileText, ArrowLeft, Download } from "lucide-react";
 import Header from '../../../../components/Header';
 
 interface Assignment {
@@ -318,7 +318,7 @@ export default function AssignmentsPage() {
                         <div key={index} className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400">
                           <FileText className="h-4 w-4" />
                           <span>{file}</span>
-                          <Button variant="ghost" size="sm">
+                          <Button variant="outline" size="sm">
                             <Download className="h-4 w-4" />
                           </Button>
                         </div>

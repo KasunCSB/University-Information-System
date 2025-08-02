@@ -7,7 +7,7 @@ import { Input } from "../../components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
 import { Textarea } from "../../components/ui/textarea";
-import { Plus, Search, Edit, Trash2, Users, Clock, BookOpen, FileText, HelpCircle, Calendar, Target, X } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Users, Clock, BookOpen, FileText, HelpCircle, Target, X } from "lucide-react";
 import Header from '../../components/Header';
 
 interface Assignment {
@@ -47,6 +47,7 @@ export default function CoursesPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newCourse, setNewCourse] = useState({
     name: "",
@@ -61,6 +62,12 @@ export default function CoursesPage() {
   const router = useRouter();
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+    
     // Simulate API call
     setTimeout(() => {
       setCourses([
@@ -128,7 +135,7 @@ export default function CoursesPage() {
       ]);
       setLoading(false);
     }, 1000);
-  }, []);
+  }, [mounted]);
 
   const filteredCourses = courses.filter(course =>
     course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -185,6 +192,10 @@ export default function CoursesPage() {
     });
     setShowAddForm(false);
   };
+
+  if (!mounted) {
+    return null;
+  }
 
   if (loading) {
     return (
@@ -425,7 +436,10 @@ export default function CoursesPage() {
                 <div>
                   <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Avg. Enrollment</p>
                   <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {courses.length > 0 ? Math.round(courses.reduce((sum, course) => sum + (course.enrolledStudents / course.maxStudents * 100), 0) / courses.length) : 0}%
+                    {courses.length > 0 ? Math.round(courses.reduce((sum, course) => {
+                      const enrollmentRate = course.maxStudents > 0 ? (course.enrolledStudents / course.maxStudents * 100) : 0
+                      return sum + enrollmentRate
+                    }, 0) / courses.length) : 0}%
                   </p>
                 </div>
               </div>
