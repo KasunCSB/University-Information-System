@@ -20,7 +20,7 @@ interface Config {
 const config: Config = {
   NODE_ENV: process.env.NODE_ENV || 'development',
   PORT: parseInt(process.env.PORT || '3001', 10),
-  MONGODB_URI: process.env.MONGODB_URI || 'mongodb+srv://kasuncsb:hXIQV56NIrGhkiwS@cluster0.qbxothz.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0',
+  MONGODB_URI: process.env.MONGODB_URI || '',
   JWT_SECRET: process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production',
   JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET || 'your-super-secret-refresh-key-change-in-production',
   JWT_EXPIRE: process.env.JWT_EXPIRE || '15m',
