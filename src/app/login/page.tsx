@@ -35,20 +35,18 @@ export default function LoginPage() {
     }
 
     try {
-      // Use AuthContext login function (accepts any username/password for frontend demo)
+      // Use AuthContext login function
       const success = await login(formData.username, formData.password)
       
       if (success) {
-        // Check for admin credentials for role-based routing
+        // Redirect based on user role after successful login
         if (formData.username.toLowerCase() === 'admin' && formData.password === 'admin123') {
-          localStorage.setItem('userRole', 'admin')
           router.push('/admin')
         } else {
-          localStorage.setItem('userRole', 'student')
           router.push('/dashboard')
         }
       } else {
-        setError('Login failed. Please try again.')
+        setError('Invalid credentials. Please try again.')
       }
     } catch (error) {
       console.error('Login error:', error)
