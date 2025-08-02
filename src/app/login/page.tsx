@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import Header from '@/components/Header'
+import Footer from '@/components/Footer'
 import { useAuth } from '@/contexts/AuthContext'
 
 export default function LoginPage() {
@@ -216,6 +217,7 @@ export default function LoginPage() {
         </div>
       </div>
       </div>
+      <Footer />
     </div>
   )
 }

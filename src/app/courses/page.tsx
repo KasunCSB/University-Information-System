@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge";
 import { Plus, Search, Edit, Trash2, Users, Clock, BookOpen } from "lucide-react";
 import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 
 interface Course {
   id: string;
@@ -310,6 +311,7 @@ export default function CoursesPage() {
           </Card>
         )}
       </div>
+      <Footer />
     </div>
   );
 }

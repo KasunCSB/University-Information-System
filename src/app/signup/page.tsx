@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import Header from '@/components/Header'
+import Footer from '@/components/Footer'
 
 export default function SignupPage() {
   const [formData, setFormData] = useState({
@@ -148,6 +149,7 @@ export default function SignupPage() {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   )
 }
