@@ -7,7 +7,7 @@ import { Input } from "../../components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
 import { Textarea } from "../../components/ui/textarea";
-import { Plus, Search, Edit, Trash2, Users, Clock, BookOpen, FileText, HelpCircle, Target, X } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Users, Clock, BookOpen, FileText, HelpCircle, Target, X, Mail } from "lucide-react";
 import Header from '../../components/Header';
 
 interface Assignment {
@@ -49,7 +49,21 @@ export default function CoursesPage() {
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showStudentsModal, setShowStudentsModal] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [newCourse, setNewCourse] = useState({
+    name: "",
+    code: "",
+    description: "",
+    instructor: "",
+    credits: 3,
+    maxStudents: 100,
+    schedule: "",
+    department: ""
+  });
+  const [editCourse, setEditCourse] = useState({
     name: "",
     code: "",
     description: "",
@@ -191,6 +205,80 @@ export default function CoursesPage() {
       department: ""
     });
     setShowAddForm(false);
+  };
+
+  const handleEditCourse = (course: Course) => {
+    setEditCourse({
+      name: course.name,
+      code: course.code,
+      description: course.description,
+      instructor: course.instructor,
+      credits: course.credits,
+      maxStudents: course.maxStudents,
+      schedule: course.schedule,
+      department: course.department
+    });
+    setSelectedCourse(course);
+    setShowEditForm(true);
+  };
+
+  const handleUpdateCourse = () => {
+    if (!editCourse.name || !editCourse.code || !editCourse.instructor) {
+      alert("Please fill in all required fields");
+      return;
+    }
+
+    setCourses(courses.map(course => 
+      course.id === selectedCourse?.id 
+        ? {
+            ...course,
+            name: editCourse.name,
+            code: editCourse.code,
+            description: editCourse.description,
+            instructor: editCourse.instructor,
+            credits: editCourse.credits,
+            maxStudents: editCourse.maxStudents,
+            schedule: editCourse.schedule,
+            department: editCourse.department
+          }
+        : course
+    ));
+    
+    setShowEditForm(false);
+    setSelectedCourse(null);
+  };
+
+  const handleDeleteCourse = (course: Course) => {
+    setSelectedCourse(course);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDeleteCourse = () => {
+    if (selectedCourse) {
+      setCourses(courses.filter(course => course.id !== selectedCourse.id));
+    }
+    setShowDeleteDialog(false);
+    setSelectedCourse(null);
+  };
+
+  const handleViewStudents = (course: Course) => {
+    setSelectedCourse(course);
+    setShowStudentsModal(true);
+  };
+
+  const resetEditForm = () => {
+    setEditCourse({
+      name: "",
+      code: "",
+      description: "",
+      instructor: "",
+      credits: 3,
+      maxStudents: 100,
+      schedule: "",
+      department: ""
+    });
+    setShowEditForm(false);
+    setSelectedCourse(null);
   };
 
   if (!mounted) {
@@ -355,6 +443,275 @@ export default function CoursesPage() {
                   Add Course
                 </Button>
               </CardFooter>
+            </Card>
+          </div>
+        )}
+
+        {/* Edit Course Form Modal */}
+        {showEditForm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200 dark:border-gray-700">
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle className="text-2xl text-gray-900 dark:text-white">Edit Course</CardTitle>
+                    <CardDescription>Update course information</CardDescription>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={resetEditForm}
+                    className="border-gray-300 dark:border-gray-600"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardHeader>
+              
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium mb-2 block text-gray-700 dark:text-gray-300">Course Name *</label>
+                    <Input
+                      value={editCourse.name}
+                      onChange={(e) => setEditCourse(prev => ({ ...prev, name: e.target.value }))}
+                      placeholder="e.g., Introduction to Computer Science"
+                      className="border-gray-300 dark:border-gray-600"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block text-gray-700 dark:text-gray-300">Course Code *</label>
+                    <Input
+                      value={editCourse.code}
+                      onChange={(e) => setEditCourse(prev => ({ ...prev, code: e.target.value }))}
+                      placeholder="e.g., CS101"
+                      className="border-gray-300 dark:border-gray-600"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium mb-2 block text-gray-700 dark:text-gray-300">Description</label>
+                  <Textarea
+                    value={editCourse.description}
+                    onChange={(e) => setEditCourse(prev => ({ ...prev, description: e.target.value }))}
+                    placeholder="Brief description of the course"
+                    className="border-gray-300 dark:border-gray-600 min-h-[100px]"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium mb-2 block text-gray-700 dark:text-gray-300">Instructor *</label>
+                    <Input
+                      value={editCourse.instructor}
+                      onChange={(e) => setEditCourse(prev => ({ ...prev, instructor: e.target.value }))}
+                      placeholder="e.g., Dr. John Smith"
+                      className="border-gray-300 dark:border-gray-600"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block text-gray-700 dark:text-gray-300">Department</label>
+                    <Input
+                      value={editCourse.department}
+                      onChange={(e) => setEditCourse(prev => ({ ...prev, department: e.target.value }))}
+                      placeholder="e.g., Computer Science"
+                      className="border-gray-300 dark:border-gray-600"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="text-sm font-medium mb-2 block text-gray-700 dark:text-gray-300">Credits</label>
+                    <Input
+                      type="number"
+                      value={editCourse.credits}
+                      onChange={(e) => setEditCourse(prev => ({ ...prev, credits: parseInt(e.target.value) || 3 }))}
+                      min="1"
+                      max="6"
+                      className="border-gray-300 dark:border-gray-600"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block text-gray-700 dark:text-gray-300">Max Students</label>
+                    <Input
+                      type="number"
+                      value={editCourse.maxStudents}
+                      onChange={(e) => setEditCourse(prev => ({ ...prev, maxStudents: parseInt(e.target.value) || 100 }))}
+                      min="1"
+                      className="border-gray-300 dark:border-gray-600"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block text-gray-700 dark:text-gray-300">Schedule</label>
+                    <Input
+                      value={editCourse.schedule}
+                      onChange={(e) => setEditCourse(prev => ({ ...prev, schedule: e.target.value }))}
+                      placeholder="e.g., MWF 10:00-11:00"
+                      className="border-gray-300 dark:border-gray-600"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+              
+              <CardFooter className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={resetEditForm}
+                  className="flex-1 border-gray-300 dark:border-gray-600"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleUpdateCourse}
+                  className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+                >
+                  Update Course
+                </Button>
+              </CardFooter>
+            </Card>
+          </div>
+        )}
+
+        {/* Delete Course Confirmation Dialog */}
+        {showDeleteDialog && selectedCourse && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <Card className="w-full max-w-md shadow-2xl border border-gray-200 dark:border-gray-700">
+              <CardHeader>
+                <CardTitle className="text-xl text-red-600 dark:text-red-400 flex items-center gap-2">
+                  <Trash2 className="h-5 w-5" />
+                  Delete Course
+                </CardTitle>
+                <CardDescription>
+                  This action cannot be undone. This will permanently delete the course and all associated data.
+                </CardDescription>
+              </CardHeader>
+              
+              <CardContent>
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                  <p className="text-sm text-red-800 dark:text-red-200">
+                    <strong>Course:</strong> {selectedCourse.name} ({selectedCourse.code})
+                  </p>
+                  <p className="text-sm text-red-800 dark:text-red-200 mt-1">
+                    <strong>Enrolled Students:</strong> {selectedCourse.enrolledStudents}
+                  </p>
+                </div>
+              </CardContent>
+              
+              <CardFooter className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowDeleteDialog(false)}
+                  className="flex-1 border-gray-300 dark:border-gray-600"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={confirmDeleteCourse}
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                >
+                  Delete Course
+                </Button>
+              </CardFooter>
+            </Card>
+          </div>
+        )}
+
+        {/* Students Modal */}
+        {showStudentsModal && selectedCourse && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200 dark:border-gray-700">
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle className="text-2xl text-gray-900 dark:text-white flex items-center gap-2">
+                      <Users className="h-6 w-6" />
+                      Students - {selectedCourse.name}
+                    </CardTitle>
+                    <CardDescription>
+                      {selectedCourse.enrolledStudents} enrolled out of {selectedCourse.maxStudents} max students
+                    </CardDescription>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setShowStudentsModal(false)}
+                    className="border-gray-300 dark:border-gray-600"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardHeader>
+              
+              <CardContent>
+                <div className="space-y-4">
+                  {/* Enrollment Progress */}
+                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm font-medium text-blue-800 dark:text-blue-200">Enrollment Status</span>
+                      <span className="text-sm text-blue-600 dark:text-blue-300">
+                        {Math.round((selectedCourse.enrolledStudents / selectedCourse.maxStudents) * 100)}% Full
+                      </span>
+                    </div>
+                    <div className="w-full bg-blue-200 dark:bg-blue-800 rounded-full h-2">
+                      <div
+                        className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                        style={{
+                          width: `${(selectedCourse.enrolledStudents / selectedCourse.maxStudents) * 100}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Sample Student List - This would come from a real database */}
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-gray-900 dark:text-white">Enrolled Students</h4>
+                    <div className="grid gap-2">
+                      {Array.from({ length: selectedCourse.enrolledStudents }, (_, i) => (
+                        <div key={i} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                              {String.fromCharCode(65 + (i % 26))}
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-900 dark:text-white">
+                                Student {i + 1}
+                              </p>
+                              <p className="text-sm text-gray-500 dark:text-gray-400">
+                                student{i + 1}@university.edu
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                              Active
+                            </Badge>
+                            <Button variant="outline" size="sm" className="border-gray-300 dark:border-gray-600">
+                              <Mail className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Add Student Section */}
+                  <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                    <h4 className="font-medium text-gray-900 dark:text-white mb-2">Add New Student</h4>
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Enter student email..."
+                        className="flex-1 border-gray-300 dark:border-gray-600"
+                      />
+                      <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                        <Plus className="h-4 w-4 mr-1" />
+                        Add
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
             </Card>
           </div>
         )}
@@ -565,15 +922,30 @@ export default function CoursesPage() {
               
               <CardFooter className="flex flex-col gap-2">
                 <div className="flex gap-2 w-full">
-                  <Button variant="outline" size="sm" className="flex-1 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800"
+                    onClick={() => handleEditCourse(course)}
+                  >
                     <Edit className="h-4 w-4 mr-1" />
                     Edit
                   </Button>
-                  <Button variant="outline" size="sm" className="border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800"
+                    onClick={() => handleViewStudents(course)}
+                  >
                     <Users className="h-4 w-4 mr-1" />
                     Students
                   </Button>
-                  <Button variant="outline" size="sm" className="border-red-300 dark:border-red-600 hover:bg-red-50 dark:hover:bg-red-900 text-red-600 dark:text-red-400">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="border-red-300 dark:border-red-600 hover:bg-red-50 dark:hover:bg-red-900 text-red-600 dark:text-red-400"
+                    onClick={() => handleDeleteCourse(course)}
+                  >
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>

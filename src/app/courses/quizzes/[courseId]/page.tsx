@@ -43,6 +43,19 @@ export default function QuizzesPage() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [courseName, setCourseName] = useState("");
 
+  // Additional state for modals and actions
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showAttemptsModal, setShowAttemptsModal] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
+  const [editQuiz, setEditQuiz] = useState({
+    title: "",
+    description: "",
+    scheduledDate: "",
+    duration: 30
+  });
+
   // Form state
   const [newQuiz, setNewQuiz] = useState({
     title: "",
@@ -157,6 +170,72 @@ export default function QuizzesPage() {
       questions: []
     });
     setShowCreateForm(false);
+  };
+
+  const handleEditQuiz = (quiz: Quiz) => {
+    setEditQuiz({
+      title: quiz.title,
+      description: quiz.description,
+      scheduledDate: quiz.scheduledDate,
+      duration: quiz.duration
+    });
+    setSelectedQuiz(quiz);
+    setShowEditForm(true);
+  };
+
+  const handleUpdateQuiz = () => {
+    if (!editQuiz.title || !editQuiz.description || !editQuiz.scheduledDate) {
+      alert("Please fill in all required fields");
+      return;
+    }
+
+    setQuizzes(quizzes.map(quiz =>
+      quiz.id === selectedQuiz?.id
+        ? {
+            ...quiz,
+            title: editQuiz.title,
+            description: editQuiz.description,
+            scheduledDate: editQuiz.scheduledDate,
+            duration: editQuiz.duration
+          }
+        : quiz
+    ));
+    
+    resetEditForm();
+  };
+
+  const resetEditForm = () => {
+    setEditQuiz({
+      title: "",
+      description: "",
+      scheduledDate: "",
+      duration: 30
+    });
+    setShowEditForm(false);
+    setSelectedQuiz(null);
+  };
+
+  const handleDeleteQuiz = (quiz: Quiz) => {
+    setSelectedQuiz(quiz);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDeleteQuiz = () => {
+    if (selectedQuiz) {
+      setQuizzes(quizzes.filter(quiz => quiz.id !== selectedQuiz.id));
+    }
+    setShowDeleteDialog(false);
+    setSelectedQuiz(null);
+  };
+
+  const handleViewAttempts = (quiz: Quiz) => {
+    setSelectedQuiz(quiz);
+    setShowAttemptsModal(true);
+  };
+
+  const handlePreviewQuiz = (quiz: Quiz) => {
+    setSelectedQuiz(quiz);
+    setShowPreviewModal(true);
   };
 
   if (loading) {
@@ -416,18 +495,35 @@ export default function QuizzesPage() {
               </CardContent>
               
               <CardFooter className="flex gap-2">
-                <Button variant="outline" size="sm">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleEditQuiz(quiz)}
+                >
                   <Edit className="h-4 w-4 mr-1" />
                   Edit
                 </Button>
-                <Button variant="outline" size="sm">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handlePreviewQuiz(quiz)}
+                >
                   <Eye className="h-4 w-4 mr-1" />
                   Preview
                 </Button>
-                <Button variant="outline" size="sm">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleViewAttempts(quiz)}
+                >
                   View Results
                 </Button>
-                <Button variant="outline" size="sm" className="text-red-600 border-red-300 hover:bg-red-50">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="text-red-600 border-red-300 hover:bg-red-50"
+                  onClick={() => handleDeleteQuiz(quiz)}
+                >
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </CardFooter>
@@ -452,6 +548,257 @@ export default function QuizzesPage() {
               </div>
             </CardContent>
           </Card>
+        )}
+
+        {/* Edit Quiz Modal */}
+        {showEditForm && selectedQuiz && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <CardTitle>Edit Quiz</CardTitle>
+                  <Button variant="outline" size="sm" onClick={resetEditForm}>
+                    ✕
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Title *</label>
+                  <Input
+                    value={editQuiz.title}
+                    onChange={(e) => setEditQuiz(prev => ({ ...prev, title: e.target.value }))}
+                    placeholder="Quiz title"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Description *</label>
+                  <Textarea
+                    value={editQuiz.description}
+                    onChange={(e) => setEditQuiz(prev => ({ ...prev, description: e.target.value }))}
+                    placeholder="Quiz description"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Scheduled Date *</label>
+                    <Input
+                      type="date"
+                      value={editQuiz.scheduledDate}
+                      onChange={(e) => setEditQuiz(prev => ({ ...prev, scheduledDate: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Duration (minutes)</label>
+                    <Input
+                      type="number"
+                      value={editQuiz.duration}
+                      onChange={(e) => setEditQuiz(prev => ({ ...prev, duration: parseInt(e.target.value) || 30 }))}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter className="flex gap-2">
+                <Button variant="outline" onClick={resetEditForm} className="flex-1">
+                  Cancel
+                </Button>
+                <Button onClick={handleUpdateQuiz} className="flex-1">
+                  Update Quiz
+                </Button>
+              </CardFooter>
+            </Card>
+          </div>
+        )}
+
+        {/* Delete Quiz Dialog */}
+        {showDeleteDialog && selectedQuiz && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <Card className="w-full max-w-md shadow-2xl">
+              <CardHeader>
+                <CardTitle className="text-red-600 flex items-center gap-2">
+                  <Trash2 className="h-5 w-5" />
+                  Delete Quiz
+                </CardTitle>
+                <CardDescription>
+                  This will permanently delete the quiz and all attempts.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                  <p className="text-sm text-red-800 dark:text-red-200">
+                    <strong>Quiz:</strong> {selectedQuiz.title}
+                  </p>
+                  <p className="text-sm text-red-800 dark:text-red-200 mt-1">
+                    <strong>Attempts:</strong> {selectedQuiz.attempts}
+                  </p>
+                </div>
+              </CardContent>
+              <CardFooter className="flex gap-2">
+                <Button variant="outline" onClick={() => setShowDeleteDialog(false)} className="flex-1">
+                  Cancel
+                </Button>
+                <Button onClick={confirmDeleteQuiz} className="flex-1 bg-red-600 hover:bg-red-700 text-white">
+                  Delete Quiz
+                </Button>
+              </CardFooter>
+            </Card>
+          </div>
+        )}
+
+        {/* Quiz Preview Modal */}
+        {showPreviewModal && selectedQuiz && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl">
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Eye className="h-6 w-6" />
+                      Preview - {selectedQuiz.title}
+                    </CardTitle>
+                    <CardDescription>
+                      {selectedQuiz.questions.length} question(s) • {selectedQuiz.duration} minutes
+                    </CardDescription>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => setShowPreviewModal(false)}>
+                    ✕
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                    <h3 className="font-medium text-blue-800 dark:text-blue-200 mb-2">Quiz Information</h3>
+                    <p className="text-sm text-blue-700 dark:text-blue-300">{selectedQuiz.description}</p>
+                    <div className="grid grid-cols-2 gap-4 mt-3 text-sm">
+                      <div>
+                        <span className="text-blue-600 dark:text-blue-400">Total Points:</span>
+                        <span className="ml-2 font-medium">{selectedQuiz.totalPoints}</span>
+                      </div>
+                      <div>
+                        <span className="text-blue-600 dark:text-blue-400">Duration:</span>
+                        <span className="ml-2 font-medium">{selectedQuiz.duration} minutes</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium text-gray-900 dark:text-white mb-4">Questions</h3>
+                    <div className="space-y-4">
+                      {selectedQuiz.questions.map((question, index) => (
+                        <div key={question.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                          <div className="flex justify-between items-start mb-2">
+                            <h4 className="font-medium">Question {index + 1}</h4>
+                            <Badge variant="secondary">{question.points} pts</Badge>
+                          </div>
+                          <p className="text-gray-700 dark:text-gray-300 mb-3">{question.question}</p>
+                          
+                          {question.type === "multiple-choice" && question.options && (
+                            <div className="space-y-2">
+                              {question.options.map((option, optIndex) => (
+                                <div 
+                                  key={optIndex}
+                                  className={`p-2 rounded border ${
+                                    option === question.correctAnswer 
+                                      ? 'bg-green-50 border-green-200 text-green-800 dark:bg-green-900/20 dark:border-green-800 dark:text-green-200'
+                                      : 'bg-gray-50 border-gray-200 dark:bg-gray-800 dark:border-gray-700'
+                                  }`}
+                                >
+                                  {String.fromCharCode(65 + optIndex)}. {option}
+                                  {option === question.correctAnswer && (
+                                    <span className="ml-2 text-xs font-medium">(Correct)</span>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          
+                          {question.type !== "multiple-choice" && (
+                            <div className="bg-green-50 border border-green-200 rounded p-2 text-green-800 dark:bg-green-900/20 dark:border-green-800 dark:text-green-200">
+                              <strong>Answer:</strong> {question.correctAnswer}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Quiz Attempts/Results Modal */}
+        {showAttemptsModal && selectedQuiz && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl">
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <HelpCircle className="h-6 w-6" />
+                      Results - {selectedQuiz.title}
+                    </CardTitle>
+                    <CardDescription>
+                      {selectedQuiz.attempts} attempt(s) completed
+                    </CardDescription>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => setShowAttemptsModal(false)}>
+                    ✕
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {/* Sample quiz attempts - this would come from a real database */}
+                  {Array.from({ length: selectedQuiz.attempts }, (_, i) => (
+                    <div key={i} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h4 className="font-medium">Student {i + 1}</h4>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            student{i + 1}@university.edu
+                          </p>
+                          <p className="text-sm text-gray-500 mt-1">
+                            Completed: {new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-lg font-bold">
+                            {Math.floor(Math.random() * 40 + 60)}/{selectedQuiz.totalPoints}
+                          </div>
+                          <div className="text-sm text-gray-600 dark:text-gray-400">
+                            {Math.floor(Math.random() * 40 + 60)}%
+                          </div>
+                          <Badge 
+                            variant="secondary" 
+                            className={Math.random() > 0.3 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}
+                          >
+                            {Math.random() > 0.3 ? "Passed" : "Failed"}
+                          </Badge>
+                        </div>
+                      </div>
+                      <div className="mt-3 flex gap-2">
+                        <Button variant="outline" size="sm">
+                          View Details
+                        </Button>
+                        <Button variant="outline" size="sm">
+                          Download Report
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {selectedQuiz.attempts === 0 && (
+                    <div className="text-center py-8">
+                      <HelpCircle className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+                      <p className="text-gray-600 dark:text-gray-400">No attempts yet</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         )}
       </div>
     </div>

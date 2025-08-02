@@ -2,12 +2,14 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react'
 import { safeGetFromStorage, safeSetToStorage, safeRemoveFromStorage } from '@/lib/storageUtils'
+import ApiService, { AuthResponse } from '@/lib/apiService'
 
 interface User {
   id: string
-  name: string
+  username: string
   email: string
   role: 'student' | 'teacher' | 'admin'
+  isEmailVerified: boolean
 }
 
 interface AuthContextType {
@@ -16,6 +18,7 @@ interface AuthContextType {
   isLoading: boolean
   login: (email: string, password: string) => Promise<boolean>
   logout: () => void
+  register: (userData: { username: string; email: string; password: string; role?: string }) => Promise<boolean>
   updateUser: (userData: Partial<User>) => void
 }
 
@@ -31,11 +34,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const clearAuthData = () => {
       safeRemoveFromStorage('isAuthenticated')
       safeRemoveFromStorage('user')
+      safeRemoveFromStorage('accessToken')
+      safeRemoveFromStorage('refreshToken')
       setUser(null)
       setIsAuthenticated(false)
     }
 
-    const checkAuth = () => {
+    const checkAuth = async () => {
       try {
         if (typeof window === 'undefined') {
           setIsLoading(false)
@@ -44,32 +49,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         const authResult = safeGetFromStorage<string>('isAuthenticated')
         const userResult = safeGetFromStorage<User>('user')
+        const tokenResult = safeGetFromStorage<string>('accessToken')
         
-        if (process.env.NODE_ENV === 'development') {
-          console.log('Auth check details:', { 
-            authSuccess: authResult.success,
-            authData: authResult.data,
-            userSuccess: userResult.success,
-            userType: typeof userResult.data
-          })
-        }
-        
-        if (authResult.success && authResult.data === 'true' && userResult.success && userResult.data) {
+        if (authResult.success && authResult.data === 'true' && 
+            userResult.success && userResult.data && 
+            tokenResult.success && tokenResult.data) {
+          
           const user = userResult.data
           
-          // Validate user object structure with detailed logging
-          if (user && typeof user === 'object' && user.id && user.name && user.email && user.role) {
-            setUser(user)
-            setIsAuthenticated(true)
+          // Validate user object structure
+          if (user && typeof user === 'object' && user.id && user.username && user.email && user.role) {
+            try {
+              // Verify token is still valid by fetching profile
+              const profileResponse = await ApiService.getProfile()
+              if (profileResponse.success && profileResponse.data) {
+                setUser(profileResponse.data as User)
+                setIsAuthenticated(true)
+              } else {
+                clearAuthData()
+              }
+            } catch (error: unknown) {
+              console.warn('Token validation failed, clearing auth data:', error)
+              clearAuthData()
+            }
           } else {
-            console.warn('Invalid user data structure, clearing auth:', {
-              user,
-              hasId: user && typeof user === 'object' && 'id' in user,
-              hasName: user && typeof user === 'object' && 'name' in user,
-              hasEmail: user && typeof user === 'object' && 'email' in user,
-              hasRole: user && typeof user === 'object' && 'role' in user,
-              type: typeof user
-            })
+            console.warn('Invalid user data structure, clearing auth')
             clearAuthData()
           }
         } else {
@@ -91,51 +95,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setIsLoading(true)
       
-      // Simulate API call with basic validation
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      const response: AuthResponse = await ApiService.login({ email, password })
       
-      // Basic validation (in a real app, this would be server-side)
-      if (!email || !password) {
-        return false
+      if (response.success && response.user && response.tokens) {
+        const userData: User = {
+          id: response.user.id,
+          username: response.user.username,
+          email: response.user.email,
+          role: response.user.role as 'student' | 'teacher' | 'admin',
+          isEmailVerified: response.user.isEmailVerified
+        }
+        
+        // Store auth data
+        const authResult = safeSetToStorage('isAuthenticated', 'true')
+        const userResult = safeSetToStorage('user', userData)
+        const tokenResult = safeSetToStorage('accessToken', response.tokens.accessToken)
+        const refreshResult = safeSetToStorage('refreshToken', response.tokens.refreshToken)
+        
+        if (authResult.success && userResult.success && tokenResult.success && refreshResult.success) {
+          setUser(userData)
+          setIsAuthenticated(true)
+          return true
+        } else {
+          console.error('Failed to store auth data')
+          return false
+        }
       }
       
-      // Determine user role based on credentials (for demo purposes)
-      let userRole: 'student' | 'teacher' | 'admin' = 'student'
-      let userName = email
-      
-      // Check for admin credentials
-      if (email.toLowerCase() === 'admin' && password === 'admin123') {
-        userRole = 'admin'
-        userName = 'Administrator'
-      } else if (email.toLowerCase().includes('teacher') || email.toLowerCase().includes('prof')) {
-        userRole = 'teacher'
-        userName = `Prof. ${email.split('@')[0]}`
-      } else {
-        // Extract name from email or use email
-        userName = email.includes('@') ? email.split('@')[0] : email
-        userName = userName.charAt(0).toUpperCase() + userName.slice(1)
-      }
-      
-      // Mock successful login with proper user object
-      const mockUser: User = {
-        id: Math.random().toString(36).substring(7),
-        name: userName,
-        email: email.includes('@') ? email : `${email}@university.edu`,
-        role: userRole
-      }
-      
-      // Safely store user data with error handling
-      const authResult = safeSetToStorage('isAuthenticated', 'true')
-      const userResult = safeSetToStorage('user', mockUser)
-      
-      if (authResult.success && userResult.success) {
-        setUser(mockUser)
-        setIsAuthenticated(true)
-        return true
-      } else {
-        console.error('Failed to store auth data:', { authResult, userResult })
-        return false
-      }
+      return false
     } catch (error) {
       console.error('Login error:', error)
       return false
@@ -144,13 +131,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const logout = useCallback(() => {
-    setUser(null)
-    setIsAuthenticated(false)
-    
-    // Safely clear localStorage
-    safeRemoveFromStorage('isAuthenticated')
-    safeRemoveFromStorage('user')
+  const register = useCallback(async (userData: { 
+    username: string; 
+    email: string; 
+    password: string; 
+    role?: string 
+  }): Promise<boolean> => {
+    try {
+      setIsLoading(true)
+      
+      const response: AuthResponse = await ApiService.register(userData)
+      
+      if (response.success) {
+        return true
+      }
+      
+      return false
+    } catch (error) {
+      console.error('Registration error:', error)
+      return false
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  const logout = useCallback(async () => {
+    try {
+      const refreshToken = safeGetFromStorage<string>('refreshToken')
+      
+      if (refreshToken.success && refreshToken.data) {
+        await ApiService.logout(refreshToken.data)
+      }
+    } catch (error) {
+      console.error('Logout error:', error)
+    } finally {
+      // Clear local storage regardless of API call success
+      setUser(null)
+      setIsAuthenticated(false)
+      
+      safeRemoveFromStorage('isAuthenticated')
+      safeRemoveFromStorage('user')
+      safeRemoveFromStorage('accessToken')
+      safeRemoveFromStorage('refreshToken')
+    }
   }, [])
 
   const updateUser = useCallback((userData: Partial<User>) => {
@@ -173,6 +196,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isLoading,
       login,
       logout,
+      register,
       updateUser
     }}>
       {children}

@@ -244,7 +244,7 @@ export default function DashboardPage() {
   if (!mounted || isLoading) {
     return (
       <div className="min-h-screen bg-white dark:bg-gray-900">
-        <AuthenticatedHeader username={user?.name || 'User'} currentPage="Dashboard" />
+        <AuthenticatedHeader username={user?.username || 'User'} currentPage="Dashboard" />
         <main className="container-responsive pt-6 pb-12">
           <div className="animate-pulse">
             <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded mb-4 w-1/3"></div>
@@ -265,14 +265,14 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
       {/* Navigation */}
-      <AuthenticatedHeader username={user?.name || 'User'} currentPage="dashboard" />
+      <AuthenticatedHeader username={user?.username || 'User'} currentPage="dashboard" />
 
       {/* Welcome Banner */}
       <div className="bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-700 dark:to-indigo-700">
         <div className="container-responsive py-6 sm:py-8 lg:py-12">
           <div className="text-center">
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-3">
-              Welcome Back, {user?.name || 'User'}! 👋
+              Welcome Back, {user?.username || 'User'}! 👋
             </h1>
             <p className="text-lg sm:text-xl text-blue-100 mb-6 sm:mb-8 max-w-2xl mx-auto">
               Ready to continue your learning journey? Track your progress and discover new courses.

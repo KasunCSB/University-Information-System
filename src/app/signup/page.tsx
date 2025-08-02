@@ -4,13 +4,17 @@ import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import Header from '@/components/Header'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function SignupPage() {
+  const { register } = useAuth()
   const [formData, setFormData] = useState({
     email: '',
     username: '',
     password: ''
   })
+  const [error, setError] = useState('')
+  const [isSuccess, setIsSuccess] = useState(false)
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -20,10 +24,71 @@ export default function SignupPage() {
     }))
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Handle signup logic here
-    console.log('Signup attempt:', formData)
+    setError('')
+    
+    if (!formData.email || !formData.username || !formData.password) {
+      setError('Please fill in all fields')
+      return
+    }
+
+    try {
+      const success = await register({
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+        role: 'student' // Default role
+      })
+      
+      if (success) {
+        setIsSuccess(true)
+      } else {
+        setError('Registration failed. Please try again.')
+      }
+    } catch (error: unknown) {
+      console.error('Registration error:', error)
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred during registration. Please try again.'
+      setError(errorMessage)
+    }
+  }
+
+  if (isSuccess) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-gray-900">
+        <Header />
+        
+        <div className="flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+          <div className="max-w-md w-full space-y-8">
+            {/* Success Message */}
+            <div className="text-center">
+              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+                Registration Successful!
+              </h1>
+              <p className="text-gray-600 dark:text-gray-300 text-base sm:text-lg mb-8">
+                Please check your email for a verification link to activate your account.
+              </p>
+              
+              <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 mb-6">
+                <p className="text-sm text-green-800 dark:text-green-400">
+                  <strong>Next Steps:</strong><br />
+                  1. Check your email inbox<br />
+                  2. Click the verification link<br />
+                  3. Return to login
+                </p>
+              </div>
+
+              <Link
+                href="/login"
+                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-base font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 transition-all duration-200 transform hover:scale-105"
+              >
+                Go to Login
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -58,6 +123,13 @@ export default function SignupPage() {
                   />
                 </div>
               </div>
+
+              {/* Error Message */}
+              {error && (
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-200 px-4 py-3 rounded-lg text-sm">
+                  {error}
+                </div>
+              )}
 
               {/* University Email Field */}
               <div>

@@ -33,6 +33,19 @@ export default function AssignmentsPage() {
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [courseName, setCourseName] = useState("");
+  
+  // Additional state for modals and actions
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showSubmissionsModal, setShowSubmissionsModal] = useState(false);
+  const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
+  const [editAssignment, setEditAssignment] = useState({
+    title: "",
+    description: "",
+    dueDate: "",
+    type: "homework" as "homework" | "project" | "lab",
+    maxPoints: 100
+  });
 
   // Form state
   const [newAssignment, setNewAssignment] = useState({
@@ -107,6 +120,70 @@ export default function AssignmentsPage() {
       files: []
     });
     setShowCreateForm(false);
+  };
+
+  const handleEditAssignment = (assignment: Assignment) => {
+    setEditAssignment({
+      title: assignment.title,
+      description: assignment.description,
+      dueDate: assignment.dueDate,
+      type: assignment.type,
+      maxPoints: assignment.maxPoints
+    });
+    setSelectedAssignment(assignment);
+    setShowEditForm(true);
+  };
+
+  const handleUpdateAssignment = () => {
+    if (!editAssignment.title || !editAssignment.description || !editAssignment.dueDate) {
+      alert("Please fill in all required fields");
+      return;
+    }
+
+    setAssignments(assignments.map(assignment =>
+      assignment.id === selectedAssignment?.id
+        ? {
+            ...assignment,
+            title: editAssignment.title,
+            description: editAssignment.description,
+            dueDate: editAssignment.dueDate,
+            type: editAssignment.type,
+            maxPoints: editAssignment.maxPoints
+          }
+        : assignment
+    ));
+    
+    resetEditForm();
+  };
+
+  const resetEditForm = () => {
+    setEditAssignment({
+      title: "",
+      description: "",
+      dueDate: "",
+      type: "homework",
+      maxPoints: 100
+    });
+    setShowEditForm(false);
+    setSelectedAssignment(null);
+  };
+
+  const handleDeleteAssignment = (assignment: Assignment) => {
+    setSelectedAssignment(assignment);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDeleteAssignment = () => {
+    if (selectedAssignment) {
+      setAssignments(assignments.filter(assignment => assignment.id !== selectedAssignment.id));
+    }
+    setShowDeleteDialog(false);
+    setSelectedAssignment(null);
+  };
+
+  const handleViewSubmissions = (assignment: Assignment) => {
+    setSelectedAssignment(assignment);
+    setShowSubmissionsModal(true);
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -329,14 +406,27 @@ export default function AssignmentsPage() {
               </CardContent>
               
               <CardFooter className="flex gap-2">
-                <Button variant="outline" size="sm">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleEditAssignment(assignment)}
+                >
                   <Edit className="h-4 w-4 mr-1" />
                   Edit
                 </Button>
-                <Button variant="outline" size="sm">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleViewSubmissions(assignment)}
+                >
                   View Submissions
                 </Button>
-                <Button variant="outline" size="sm" className="text-red-600 border-red-300 hover:bg-red-50">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="text-red-600 border-red-300 hover:bg-red-50"
+                  onClick={() => handleDeleteAssignment(assignment)}
+                >
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </CardFooter>
@@ -361,6 +451,180 @@ export default function AssignmentsPage() {
               </div>
             </CardContent>
           </Card>
+        )}
+
+        {/* Edit Assignment Modal */}
+        {showEditForm && selectedAssignment && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <CardTitle>Edit Assignment</CardTitle>
+                  <Button variant="outline" size="sm" onClick={resetEditForm}>
+                    ✕
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Title *</label>
+                  <Input
+                    value={editAssignment.title}
+                    onChange={(e) => setEditAssignment(prev => ({ ...prev, title: e.target.value }))}
+                    placeholder="Assignment title"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Description *</label>
+                  <Textarea
+                    value={editAssignment.description}
+                    onChange={(e) => setEditAssignment(prev => ({ ...prev, description: e.target.value }))}
+                    placeholder="Assignment description"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Due Date *</label>
+                    <Input
+                      type="date"
+                      value={editAssignment.dueDate}
+                      onChange={(e) => setEditAssignment(prev => ({ ...prev, dueDate: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Max Points</label>
+                    <Input
+                      type="number"
+                      value={editAssignment.maxPoints}
+                      onChange={(e) => setEditAssignment(prev => ({ ...prev, maxPoints: parseInt(e.target.value) || 100 }))}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Type</label>
+                  <select
+                    value={editAssignment.type}
+                    onChange={(e) => setEditAssignment(prev => ({ ...prev, type: e.target.value as "homework" | "project" | "lab" }))}
+                    className="w-full p-2 border border-gray-300 rounded-md dark:border-gray-600 dark:bg-gray-700"
+                  >
+                    <option value="homework">Homework</option>
+                    <option value="project">Project</option>
+                    <option value="lab">Lab</option>
+                  </select>
+                </div>
+              </CardContent>
+              <CardFooter className="flex gap-2">
+                <Button variant="outline" onClick={resetEditForm} className="flex-1">
+                  Cancel
+                </Button>
+                <Button onClick={handleUpdateAssignment} className="flex-1">
+                  Update Assignment
+                </Button>
+              </CardFooter>
+            </Card>
+          </div>
+        )}
+
+        {/* Delete Assignment Dialog */}
+        {showDeleteDialog && selectedAssignment && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <Card className="w-full max-w-md shadow-2xl">
+              <CardHeader>
+                <CardTitle className="text-red-600 flex items-center gap-2">
+                  <Trash2 className="h-5 w-5" />
+                  Delete Assignment
+                </CardTitle>
+                <CardDescription>
+                  This will permanently delete the assignment and all submissions.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                  <p className="text-sm text-red-800 dark:text-red-200">
+                    <strong>Assignment:</strong> {selectedAssignment.title}
+                  </p>
+                  <p className="text-sm text-red-800 dark:text-red-200 mt-1">
+                    <strong>Submissions:</strong> {selectedAssignment.submissionCount}
+                  </p>
+                </div>
+              </CardContent>
+              <CardFooter className="flex gap-2">
+                <Button variant="outline" onClick={() => setShowDeleteDialog(false)} className="flex-1">
+                  Cancel
+                </Button>
+                <Button onClick={confirmDeleteAssignment} className="flex-1 bg-red-600 hover:bg-red-700 text-white">
+                  Delete Assignment
+                </Button>
+              </CardFooter>
+            </Card>
+          </div>
+        )}
+
+        {/* Submissions Modal */}
+        {showSubmissionsModal && selectedAssignment && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl">
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <FileText className="h-6 w-6" />
+                      Submissions - {selectedAssignment.title}
+                    </CardTitle>
+                    <CardDescription>
+                      {selectedAssignment.submissionCount} submission(s) received
+                    </CardDescription>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => setShowSubmissionsModal(false)}>
+                    ✕
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {/* Sample submissions - this would come from a real database */}
+                  {Array.from({ length: selectedAssignment.submissionCount }, (_, i) => (
+                    <div key={i} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h4 className="font-medium">Student {i + 1}</h4>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            student{i + 1}@university.edu
+                          </p>
+                          <p className="text-sm text-gray-500 mt-1">
+                            Submitted: {new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Badge variant="secondary" className="bg-green-100 text-green-800">
+                            Submitted
+                          </Badge>
+                          <Button variant="outline" size="sm">
+                            View
+                          </Button>
+                          <Button variant="outline" size="sm">
+                            Grade
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="mt-2">
+                        <p className="text-sm">
+                          Files: assignment_{i + 1}_solution.py, report.pdf
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {selectedAssignment.submissionCount === 0 && (
+                    <div className="text-center py-8">
+                      <FileText className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+                      <p className="text-gray-600 dark:text-gray-400">No submissions yet</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         )}
       </div>
     </div>
