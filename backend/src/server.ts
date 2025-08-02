@@ -82,8 +82,8 @@ const startServer = async () => {
     await connectDatabase();
     
     const server = app.listen(config.PORT, () => {
-      logger.info(`🚀 Server running on port ${config.PORT} in ${config.NODE_ENV} mode`);
-      logger.info(`📱 Frontend URL: ${config.FRONTEND_URL}`);
+      logger.info(`Server running on port ${config.PORT} in ${config.NODE_ENV} mode`);
+      logger.info(`Frontend URL: ${config.FRONTEND_URL}`);
     });
 
     // Graceful shutdown
