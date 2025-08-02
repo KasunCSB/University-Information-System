@@ -1,15 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Enable standalone build for Docker
+  output: 'standalone',
+  
   // Disable experimental features to avoid warnings
   experimental: {
     typedRoutes: false,
   },
-  
-  // Disabled experimental features that cause issues
-  // experimental: {
-  //   optimizeCss: true,
-  // },
   
   // Image optimization settings
   images: {
