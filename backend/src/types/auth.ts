@@ -6,12 +6,15 @@ export interface User {
   role: 'student' | 'teacher' | 'admin';
   isEmailVerified: boolean;
   emailVerificationToken?: string;
+  emailVerificationExpires?: Date;
   passwordResetToken?: string;
   passwordResetExpires?: Date;
   refreshTokens: string[];
   createdAt?: Date;
   updatedAt?: Date;
   lastLogin?: Date;
+  loginAttempts?: number;
+  lockUntil?: Date;
 }
 
 // Type for user attached to request (can be either interface or document)
@@ -29,6 +32,7 @@ export interface JWTPayload {
   userId: string;
   email: string;
   role: string;
+  isEmailVerified: boolean;
   iat?: number;
   exp?: number;
 }
@@ -54,6 +58,8 @@ export interface AuthResponse {
     accessToken: string;
     refreshToken: string;
   };
+  requiresEmailVerification?: boolean;
+  userEmail?: string;
 }
 
 export interface ApiResponse<T = unknown> {

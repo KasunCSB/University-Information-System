@@ -260,14 +260,14 @@ export default function CoursesPage() {
                   <div className="flex justify-between text-xs">
                     <span className="text-gray-500 dark:text-gray-400">Enrollment Progress</span>
                     <span className="font-medium text-gray-900 dark:text-white">
-                      {Math.round((course.enrolledStudents / course.maxStudents) * 100)}%
+                      {course.maxStudents > 0 ? Math.round((course.enrolledStudents / course.maxStudents) * 100) : 0}%
                     </span>
                   </div>
                   <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                     <div
                       className="bg-gradient-to-r from-blue-500 to-indigo-500 h-2 rounded-full transition-all duration-300"
                       style={{
-                        width: `${(course.enrolledStudents / course.maxStudents) * 100}%`,
+                        width: `${course.maxStudents > 0 ? (course.enrolledStudents / course.maxStudents) * 100 : 0}%`,
                       }}
                     />
                   </div>

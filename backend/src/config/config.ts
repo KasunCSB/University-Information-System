@@ -13,8 +13,10 @@ interface Config {
   SESSION_SECRET: string;
   EMAIL_USER: string;
   EMAIL_PASS: string;
+  EMAIL_FROM: string;
   FRONTEND_URL: string;
   CORS_ORIGIN: string;
+  REDIS_URL?: string;
 }
 
 const config: Config = {
@@ -28,8 +30,10 @@ const config: Config = {
   SESSION_SECRET: process.env.SESSION_SECRET || 'your-session-secret-change-in-production',
   EMAIL_USER: process.env.EMAIL_USER || '',
   EMAIL_PASS: process.env.EMAIL_PASS || '',
+  EMAIL_FROM: process.env.EMAIL_FROM || 'noreply@localhost',
   FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:3000',
-  CORS_ORIGIN: process.env.CORS_ORIGIN || 'http://localhost:3000'
+  CORS_ORIGIN: process.env.CORS_ORIGIN || 'http://localhost:3000',
+  REDIS_URL: process.env.REDIS_URL
 };
 
 // Validate required environment variables

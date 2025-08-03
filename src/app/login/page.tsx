@@ -11,7 +11,7 @@ export default function LoginPage() {
   const router = useRouter()
   const { login, isLoading } = useAuth()
   const [formData, setFormData] = useState({
-    username: '',
+    email: '',
     password: '',
     rememberMe: false
   })
@@ -29,28 +29,52 @@ export default function LoginPage() {
     e.preventDefault()
     setError('')
     
-    if (!formData.username || !formData.password) {
-      setError('Please enter both username and password')
+    if (!formData.email || !formData.password) {
+      setError('Please enter both email/username and password')
       return
     }
 
     try {
       // Use AuthContext login function
-      const success = await login(formData.username, formData.password)
+      const success = await login(formData.email, formData.password)
       
       if (success) {
-        // Redirect based on user role after successful login
-        if (formData.username.toLowerCase() === 'admin' && formData.password === 'admin123') {
-          router.push('/admin')
+        // Get user data to determine role-based redirection
+        const userStr = localStorage.getItem('user')
+        if (userStr) {
+          const user = JSON.parse(userStr)
+          // Redirect based on user role
+          switch (user.role) {
+            case 'admin':
+              router.push('/admin')
+              break
+            case 'teacher':
+              router.push('/courses') // Teacher course management
+              break
+            case 'student':
+            default:
+              router.push('/courses') // Student course view
+              break
+          }
         } else {
+          // Fallback to dashboard if no user data
           router.push('/dashboard')
         }
       } else {
         setError('Invalid credentials. Please try again.')
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Login error:', error)
-      setError('An error occurred during login. Please try again.')
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred during login. Please try again.'
+      
+      // Check if this is an email verification error
+      if (errorMessage.includes('Email verification required')) {
+        // Redirect to email verification page
+        router.push('/email-verification')
+        return
+      }
+      
+      setError(errorMessage)
     }
   }
 
@@ -66,18 +90,8 @@ export default function LoginPage() {
             Welcome to UIS
           </h1>
           <p className="text-gray-600 dark:text-gray-300 text-base sm:text-lg">
-            Login to your account using username & password
+            Login to your account using email/username & password
           </p>
-        </div>
-
-        {/* Demo Credentials Info */}
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-          <h3 className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">Demo Access:</h3>
-          <div className="text-xs text-blue-700 dark:text-blue-300 space-y-1">
-            <p><strong>Student:</strong> Any username/password combination</p>
-            <p><strong>Admin:</strong> username: <code>admin</code>, password: <code>admin123</code></p>
-            <p><strong>Teacher:</strong> Any username containing &ldquo;teacher&rdquo; or &ldquo;prof&rdquo;</p>
-          </div>
         </div>
 
         {/* Login Form */}
@@ -104,20 +118,20 @@ export default function LoginPage() {
               </div>
             )}
 
-            {/* Username Field */}
+            {/* Email/Username Field */}
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Username
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Email or Username
               </label>
               <input
-                id="username"
-                name="username"
+                id="email"
+                name="email"
                 type="text"
                 required
-                value={formData.username}
+                value={formData.email}
                 onChange={handleInputChange}
                 className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 text-gray-900 dark:text-white dark:placeholder-gray-400 transition-colors"
-                placeholder="Enter your username"
+                placeholder="Enter your email or username"
               />
             </div>
 

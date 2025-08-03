@@ -734,7 +734,6 @@ const getFileIcon = (type: string) => {
 export default function CourseDetailPage() {
   const params = useParams()
   const router = useRouter()
-  const [username, setUsername] = useState('')
   const [activeTab, setActiveTab] = useState('overview')
 
   const courseId = params.id as string
@@ -742,20 +741,17 @@ export default function CourseDetailPage() {
 
   useEffect(() => {
     const isAuthenticated = localStorage.getItem('isAuthenticated')
-    const user = localStorage.getItem('user')
     
     if (!isAuthenticated) {
       router.push('/login')
       return
     }
-    
-    setUsername(user || 'User')
   }, [router])
 
   if (!course) {
     return (
       <div className="min-h-screen bg-white dark:bg-gray-900">
-        <AuthenticatedHeader username={username} currentPage="courses" />
+        <AuthenticatedHeader currentPage="courses" />
         <div className="container-responsive py-8">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Course Not Found</h1>
@@ -771,7 +767,7 @@ export default function CourseDetailPage() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
-      <AuthenticatedHeader username={username} currentPage="courses" />
+      <AuthenticatedHeader currentPage="courses" />
       
       {/* Course Header */}
       <div className={`bg-gradient-to-r ${course.gradient} relative`}>

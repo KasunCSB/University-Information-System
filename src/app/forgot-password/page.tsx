@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import Header from '@/components/Header'
+import ApiService from '@/lib/apiService'
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
@@ -23,11 +24,16 @@ export default function ForgotPasswordPage() {
       return
     }
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false)
+    try {
+      await ApiService.requestPasswordReset(email)
       setIsSubmitted(true)
-    }, 2000)
+    } catch (error: unknown) {
+      console.error('Password reset request error:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Failed to send reset email. Please try again.'
+      setError(errorMessage)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   if (isSubmitted) {
@@ -83,7 +89,11 @@ export default function ForgotPasswordPage() {
 
                   {/* Resend Button */}
                   <button
-                    onClick={() => setIsSubmitted(false)}
+                    onClick={() => {
+                      setIsSubmitted(false)
+                      setEmail('')
+                      setError('')
+                    }}
                     className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-base font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 transition-all duration-200 transform hover:scale-105"
                   >
                     Send Another Email

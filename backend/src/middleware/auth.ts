@@ -39,6 +39,28 @@ export const passwordResetLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+export const emailVerificationLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 3, // Limit each IP to 3 email verification requests per windowMs
+  message: {
+    success: false,
+    message: 'Too many email verification attempts. Please try again later.',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+export const tokenVerificationLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000, // 5 minutes
+  max: 10, // Allow more attempts for token verification since it's just checking validity
+  message: {
+    success: false,
+    message: 'Too many token verification attempts. Please try again later.',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // Authentication middleware
 export const authenticateToken = async (
   req: Request,
@@ -57,9 +79,10 @@ export const authenticateToken = async (
       return;
     }
 
-    const decoded = TokenService.verifyAccessToken(token);
+    // Verify token and check blacklist
+    const decoded = await TokenService.verifyAccessTokenWithBlacklist(token);
     
-    // Get fresh user data
+    // Get fresh user data to ensure we have the latest email verification status
     const user = await UserModel.findById(decoded.userId);
     if (!user) {
       res.status(401).json({
@@ -69,7 +92,18 @@ export const authenticateToken = async (
       return;
     }
 
-    // Add user to request object
+    // Check if email verification status in token matches current user status
+    // If not, the user needs to refresh their token or log in again
+    if (decoded.isEmailVerified !== user.isEmailVerified) {
+      res.status(401).json({
+        success: false,
+        message: 'Token out of sync. Please log in again.',
+        code: 'TOKEN_SYNC_REQUIRED'
+      } as ApiResponse);
+      return;
+    }
+
+    // Add user to request object with current data from DB
     req.user = {
       _id: user._id?.toString() || '',
       username: user.username,
@@ -80,9 +114,22 @@ export const authenticateToken = async (
     next();
   } catch (error) {
     logger.error('Token authentication error:', error);
+    
+    // Provide more specific error messages based on the error type
+    let message = 'Invalid access token';
+    if (error instanceof Error) {
+      if (error.message.includes('expired')) {
+        message = 'Access token has expired';
+      } else if (error.message.includes('blacklisted') || error.message.includes('invalidated')) {
+        message = 'Access token has been invalidated';
+      } else if (error.message.includes('malformed')) {
+        message = 'Malformed access token';
+      }
+    }
+    
     res.status(401).json({
       success: false,
-      message: 'Invalid access token'
+      message
     } as ApiResponse);
   }
 };

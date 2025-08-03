@@ -18,7 +18,10 @@ interface AuthContextType {
   isLoading: boolean
   login: (email: string, password: string) => Promise<boolean>
   logout: () => void
-  register: (userData: { username: string; email: string; password: string; role?: string }) => Promise<boolean>
+  // Email verification and registration flow
+  sendVerificationEmail: (email: string) => Promise<{ success: boolean; message?: string }>
+  verifyEmailToken: (token: string) => Promise<{ success: boolean; message?: string; data?: { email: string; token: string; expiresAt?: string } }>
+  completeRegistration: (data: { token: string; username: string; password: string; role?: string }) => Promise<{ success: boolean; message?: string }>
   updateUser: (userData: Partial<User>) => void
 }
 
@@ -63,14 +66,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               // Verify token is still valid by fetching profile
               const profileResponse = await ApiService.getProfile()
               if (profileResponse.success && profileResponse.data) {
-                setUser(profileResponse.data as User)
+                const profileUser = profileResponse.data as User
+                // Update user data with latest from server (especially email verification status)
+                setUser(profileUser)
                 setIsAuthenticated(true)
+                
+                // Update stored user data if there are changes
+                if (JSON.stringify(user) !== JSON.stringify(profileUser)) {
+                  safeSetToStorage('user', profileUser)
+                }
               } else {
                 clearAuthData()
               }
             } catch (error: unknown) {
               console.warn('Token validation failed, clearing auth data:', error)
-              clearAuthData()
+              // Check if it's a token sync error
+              if (error instanceof Error && error.message.includes('Token out of sync')) {
+                console.info('Token out of sync detected, will attempt refresh on next API call')
+                setUser(user) // Keep user data but they'll get refreshed tokens on next API call
+                setIsAuthenticated(true)
+              } else {
+                clearAuthData()
+              }
             }
           } else {
             console.warn('Invalid user data structure, clearing auth')
@@ -120,36 +137,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.error('Failed to store auth data')
           return false
         }
+      } else if (!response.success && response.requiresEmailVerification) {
+        // Store user email for email verification process
+        if (response.userEmail) {
+          const userDataForVerification = { email: response.userEmail }
+          safeSetToStorage('user', userDataForVerification)
+        }
+        throw new Error(response.message || 'Email verification required')
       }
       
       return false
     } catch (error) {
       console.error('Login error:', error)
-      return false
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
-
-  const register = useCallback(async (userData: { 
-    username: string; 
-    email: string; 
-    password: string; 
-    role?: string 
-  }): Promise<boolean> => {
-    try {
-      setIsLoading(true)
-      
-      const response: AuthResponse = await ApiService.register(userData)
-      
-      if (response.success) {
-        return true
-      }
-      
-      return false
-    } catch (error) {
-      console.error('Registration error:', error)
-      return false
+      // Re-throw the error so the login page can handle it
+      throw error
     } finally {
       setIsLoading(false)
     }
@@ -189,6 +190,58 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [user])
 
+  // Three-step registration methods
+  const sendVerificationEmail = useCallback(async (email: string): Promise<{ success: boolean; message?: string }> => {
+    try {
+      setIsLoading(true)
+      const response = await ApiService.sendVerificationEmail(email)
+      return { success: response.success, message: response.message }
+    } catch (error) {
+      console.error('Send verification email error:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Failed to send verification email'
+      return { success: false, message: errorMessage }
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  const verifyEmailToken = useCallback(async (token: string): Promise<{ success: boolean; message?: string; data?: { email: string; token: string; expiresAt?: string } }> => {
+    try {
+      setIsLoading(true)
+      const response = await ApiService.verifyEmailToken(token)
+      return { 
+        success: response.success, 
+        message: response.message,
+        data: response.data 
+      }
+    } catch (error) {
+      console.error('Verify email token error:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Email verification failed'
+      return { success: false, message: errorMessage }
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  const completeRegistration = useCallback(async (data: { 
+    token: string; 
+    username: string; 
+    password: string; 
+    role?: string 
+  }): Promise<{ success: boolean; message?: string }> => {
+    try {
+      setIsLoading(true)
+      const response = await ApiService.completeRegistration(data)
+      return { success: response.success, message: response.message }
+    } catch (error) {
+      console.error('Complete registration error:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Registration failed'
+      return { success: false, message: errorMessage }
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
   return (
     <AuthContext.Provider value={{
       user,
@@ -196,7 +249,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isLoading,
       login,
       logout,
-      register,
+      sendVerificationEmail,
+      verifyEmailToken,
+      completeRegistration,
       updateUser
     }}>
       {children}

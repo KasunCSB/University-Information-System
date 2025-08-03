@@ -2,11 +2,13 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import mongoose from 'mongoose';
 import { connectDatabase } from './config/database.js';
 import config from './config/config.js';
 import logger from './config/logger.js';
 import authRoutes from './routes/auth.js';
 import { errorHandler } from './middleware/auth.js';
+import { checkDatabaseConnection, gracefulDatabaseHandler, dbHealthCheck } from './middleware/database.js';
 
 const app = express();
 
@@ -42,6 +44,9 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Database middleware
+app.use(gracefulDatabaseHandler);
+
 // Logging middleware
 if (config.NODE_ENV !== 'test') {
   app.use(morgan('combined', {
@@ -51,18 +56,33 @@ if (config.NODE_ENV !== 'test') {
   }));
 }
 
-// Health check endpoint
-app.get('/health', (req, res) => {
+// Health check endpoint with database health check
+app.get('/health', dbHealthCheck, (req, res) => {
   res.json({
     success: true,
     message: 'UIS Backend API is running',
     timestamp: new Date().toISOString(),
-    environment: config.NODE_ENV
+    environment: config.NODE_ENV,
+    database: 'Connected'
+  });
+});
+
+// Database health endpoint
+app.get('/health/db', dbHealthCheck, (req, res) => {
+  res.json({
+    success: true,
+    message: 'Database connection healthy',
+    database: {
+      status: 'Connected',
+      readyState: mongoose.connection.readyState,
+      host: mongoose.connection.host,
+      name: mongoose.connection.name
+    }
   });
 });
 
 // API routes
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', checkDatabaseConnection, authRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {

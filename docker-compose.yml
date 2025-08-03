@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # Backend API
   backend:
     build:
       context: ./backend
@@ -9,39 +8,57 @@ services:
     ports:
       - "3001:3001"
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=development
       - PORT=3001
-      - MONGODB_URI=${MONGODB_URI}
-      - JWT_SECRET=${JWT_SECRET}
-      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
-      - SESSION_SECRET=${SESSION_SECRET}
-      - EMAIL_USER=${EMAIL_USER}
-      - EMAIL_PASS=${EMAIL_PASS}
-      - FRONTEND_URL=${FRONTEND_URL}
-      - CORS_ORIGIN=${FRONTEND_URL}
+      - MONGODB_URI=mongodb://mongodb:27017/university_information_system
+      - JWT_SECRET=development-jwt-secret-key
+      - JWT_EXPIRES_IN=7d
+      - REFRESH_TOKEN_EXPIRES_IN=30d
+      - BCRYPT_ROUNDS=12
+      - SESSION_SECRET=development-session-secret
+      - COOKIE_SECRET=development-cookie-secret
+      - COOKIE_SECURE=false
+      - COOKIE_HTTP_ONLY=true
+      - COOKIE_SAME_SITE=lax
+      - FRONTEND_URL=http://localhost:3000
+      - CORS_ORIGINS=http://localhost:3000,http://localhost:3001
+      - APP_URL=http://localhost:3001
+      - SMTP_HOST=smtp.gmail.com
+      - SMTP_PORT=587
+      - SMTP_SECURE=false
+      - SMTP_USER=your-email@gmail.com
+      - SMTP_PASS=your-app-password
+      - EMAIL_FROM=noreply@uis.edu.lk
+      - EMAIL_FROM_NAME=University Information System
+      - LOG_LEVEL=info
+      - ENABLE_API_DOCS=true
+      - ENABLE_REQUEST_LOGGING=true
     volumes:
-      - backend_logs:/app/logs
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
-  # Frontend (Next.js)
-  frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=production
-      - NEXT_PUBLIC_API_URL=http://backend:3001/api
+      - ./backend/uploads:/app/uploads
+      - ./backend/logs:/app/logs
     depends_on:
-      - backend
+      - mongodb
+    networks:
+      - uis-network
+    restart: unless-stopped
+
+  mongodb:
+    image: mongo:7.0
+    container_name: uis-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=university_information_system
+    volumes:
+      - mongodb_data:/data/db
+      - ./database/init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      - uis-network
     restart: unless-stopped
 
 volumes:
-  backend_logs:
+  mongodb_data:
+
+networks:
+  uis-network:
+    driver: bridge
