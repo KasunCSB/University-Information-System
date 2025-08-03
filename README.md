@@ -297,15 +297,12 @@ NEXT_PUBLIC_API_URL=https://uis-backend-app.azurewebsites.net/api
 
 This project is developed and maintained by the **UIS Development Team**:
 
-#### **Lead Developer & Project Architect**
-- **Kasun Camushan** ([@KasunCSB](https://github.com/KasunCSB))
-  - Full-stack development and system architecture
-  - Backend API design and implementation
-  - Frontend React/Next.js development
-  - Database design and optimization
-  - Azure cloud deployment and DevOps
-  - Security implementation and authentication system
-  - Project management and documentation
+- **Kasun Chanaka** ([@KasunCSB](https://github.com/KasunCSB))
+- **Bodhana Jayawickrama** ([@bodhana23](https://github.com/bodhana23))
+- **Sandali Alahakoon** ([@sna2299](https://github.com/sna2299))
+- **Harishchandran** ([@HarishCN11](https://github.com/HarishCN11))
+- **Paboda Kaushali** ([@kaushali24](https://github.com/kaushali24))
+- **Thilanga Nimesh** ([@Thilanga24](https://github.com/Thilanga24))
 
 #### **Core Contributions**
 
@@ -403,3 +400,4 @@ To create a comprehensive, accessible, and modern platform that connects all Sri
 **Made with ❤️ by the UIS Development Team**
 
 *Connecting Sri Lankan Universities through Technology*
+
