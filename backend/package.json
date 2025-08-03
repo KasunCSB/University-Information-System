@@ -5,18 +5,21 @@
   "type": "module",
   "main": "dist/server.js",
   "scripts": {
-    "dev": "nodemon src/server.ts",
+    "dev": "nodemon",
     "build": "rimraf dist && tsc",
     "start": "node dist/server.js",
+    "start:prod": "NODE_ENV=production node dist/server.js",
     "test": "jest",
     "lint": "eslint src/",
-    "format": "prettier --write src/**/*.ts"
+    "format": "prettier --write src/**/*.ts",
+    "build:production": "npm run lint && npm run build",
+    "deploy:azure": "npm run build:production && echo 'Ready for Azure deployment'",
+    "health-check": "curl http://localhost:3001/health || echo 'Server not running'"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "connect-mongo": "^5.1.0",
     "cors": "^2.8.5",
-    "crypto": "^1.0.1",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "express-rate-limit": "^7.1.5",

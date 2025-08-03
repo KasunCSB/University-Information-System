@@ -1,0 +1,14 @@
+{
+  "version": "1.0",
+  "applicationUrl": ".",
+  "webAppZipPackage": "backend",
+  "appSettings": {
+    "NODE_ENV": "production",
+    "PORT": "8080",
+    "WEBSITES_PORT": "8080",
+    "WEBSITE_NODE_DEFAULT_VERSION": "18.20.4"
+  },
+  "startup": {
+    "script": "npm start"
+  }
+}

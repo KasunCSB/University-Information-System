@@ -4,25 +4,24 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import ThemeToggle from './ThemeToggle'
+import { useAuth } from '@/contexts/AuthContext'
 
 interface AuthenticatedHeaderProps {
-  username?: string
   currentPage?: string
 }
 
-export default function AuthenticatedHeader({ username = 'User', currentPage }: AuthenticatedHeaderProps) {
+export default function AuthenticatedHeader({ currentPage }: AuthenticatedHeaderProps) {
   const router = useRouter()
+  const { user, logout } = useAuth()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
-  const [userRole, setUserRole] = useState<string | null>(null)
 
   useEffect(() => {
     setMounted(true)
-    setUserRole(localStorage.getItem('userRole'))
   }, [])
 
-  const handleLogout = () => {
-    localStorage.clear()
+  const handleLogout = async () => {
+    await logout()
     router.push('/login')
   }
 
@@ -34,7 +33,7 @@ export default function AuthenticatedHeader({ username = 'User', currentPage }: 
     { href: '/assignments', label: 'Assignments', id: 'assignments' },
     { href: '/communication', label: 'Communication', id: 'communication' },
     { href: '/university-info', label: 'Universities', id: 'universities' },
-    ...(userRole === 'admin' ? [{ href: '/admin', label: 'Admin Panel', id: 'admin' }] : [])
+    ...(user?.role === 'admin' ? [{ href: '/admin', label: 'Admin Panel', id: 'admin' }] : [])
   ]
 
   if (!mounted) {
@@ -88,9 +87,9 @@ export default function AuthenticatedHeader({ username = 'User', currentPage }: 
           <div className="hidden md:flex items-center space-x-4">
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center">
-                <span className="text-white text-sm font-medium">{username.charAt(0).toUpperCase()}</span>
+                <span className="text-white text-sm font-medium">{user?.username?.charAt(0).toUpperCase() || 'U'}</span>
               </div>
-              <span className="text-gray-700 dark:text-gray-300 text-sm">Welcome, {username}</span>
+              <span className="text-gray-700 dark:text-gray-300 text-sm">Welcome, {user?.username || 'User'}</span>
             </div>
             <ThemeToggle />
             <button 
@@ -136,9 +135,9 @@ export default function AuthenticatedHeader({ username = 'User', currentPage }: 
               <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
                 <div className="flex items-center px-3 py-2 space-x-3">
                   <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center">
-                    <span className="text-white text-sm font-medium">{username.charAt(0).toUpperCase()}</span>
+                    <span className="text-white text-sm font-medium">{user?.username?.charAt(0).toUpperCase() || 'U'}</span>
                   </div>
-                  <span className="text-gray-700 dark:text-gray-300 text-sm">Welcome, {username}</span>
+                  <span className="text-gray-700 dark:text-gray-300 text-sm">Welcome, {user?.username || 'User'}</span>
                 </div>
                 <button 
                   onClick={() => {

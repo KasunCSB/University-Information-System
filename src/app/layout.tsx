@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import ProductionErrorBoundary from "@/components/ProductionErrorBoundary";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -44,13 +45,15 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ErrorBoundary>
-          <ThemeProvider>
-            <AuthProvider>
-              {children}
-            </AuthProvider>
-          </ThemeProvider>
-        </ErrorBoundary>
+        <ProductionErrorBoundary>
+          <ErrorBoundary>
+            <ThemeProvider>
+              <AuthProvider>
+                {children}
+              </AuthProvider>
+            </ThemeProvider>
+          </ErrorBoundary>
+        </ProductionErrorBoundary>
       </body>
     </html>
   );

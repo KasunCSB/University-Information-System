@@ -8,6 +8,7 @@ interface ProtectedRouteProps {
   children: React.ReactNode
   requireAuth?: boolean
   requireRole?: 'student' | 'teacher' | 'admin'
+  requireEmailVerification?: boolean
   redirectTo?: string
 }
 
@@ -15,6 +16,7 @@ export default function ProtectedRoute({
   children, 
   requireAuth = true, 
   requireRole,
+  requireEmailVerification = false,
   redirectTo = '/login'
 }: ProtectedRouteProps) {
   const { isAuthenticated, user, isLoading } = useAuth()
@@ -31,8 +33,13 @@ export default function ProtectedRoute({
         router.push('/dashboard') // Redirect to dashboard if wrong role
         return
       }
+
+      if (requireEmailVerification && user && !user.isEmailVerified) {
+        router.push('/email-verification')
+        return
+      }
     }
-  }, [isAuthenticated, user, isLoading, requireAuth, requireRole, redirectTo, router])
+  }, [isAuthenticated, user, isLoading, requireAuth, requireRole, requireEmailVerification, redirectTo, router])
 
   // Show loading state while checking auth
   if (isLoading) {
@@ -49,6 +56,10 @@ export default function ProtectedRoute({
   }
 
   if (requireRole && user && user.role !== requireRole) {
+    return null
+  }
+
+  if (requireEmailVerification && user && !user.isEmailVerified) {
     return null
   }
 

@@ -263,7 +263,7 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
-      <AuthenticatedHeader username="Administrator" currentPage="admin" />
+      <AuthenticatedHeader currentPage="admin" />
       
       <div className="container mx-auto px-4 py-8">
         {/* Header with Mode Toggle */}

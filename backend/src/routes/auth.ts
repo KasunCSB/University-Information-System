@@ -1,60 +1,41 @@
 import { Router } from 'express';
 import { AuthController } from '../controllers/authController.js';
 import {
-  validateRegistration,
+  validateCompleteRegistration,
   validateLogin,
   validatePasswordResetRequest,
   validatePasswordReset,
-  validateToken
+  validateToken,
+  validateEmailVerification
 } from '../middleware/validation.js';
 import {
   createAccountLimiter,
   loginLimiter,
   passwordResetLimiter,
-  authenticateToken,
-  authorizeRoles,
-  requireEmailVerification
+  emailVerificationLimiter,
+  tokenVerificationLimiter,
+  authenticateToken
 } from '../middleware/auth.js';
 
 const router = Router();
 
-// Public routes
-router.post('/register', createAccountLimiter, validateRegistration, AuthController.register);
+// Public routes - Step-by-step registration
+router.post('/send-verification', emailVerificationLimiter, validateEmailVerification, AuthController.sendVerificationEmail);
+router.post('/resend-verification', emailVerificationLimiter, validateEmailVerification, AuthController.sendVerificationEmail); // Add resend endpoint
+router.post('/verify-token', tokenVerificationLimiter, validateToken, AuthController.verifyEmailToken);
+router.post('/complete-registration', createAccountLimiter, validateCompleteRegistration, AuthController.completeRegistration);
+
+// Email link verification (compatibility for email links)
+router.get('/verify-email', AuthController.verifyEmailFromLink);
+router.post('/verify-email', AuthController.verifyEmailFromLink);
+
 router.post('/login', loginLimiter, validateLogin, AuthController.login);
 router.post('/refresh-token', AuthController.refreshToken);
-router.post('/verify-email', validateToken, AuthController.verifyEmail);
 router.post('/request-password-reset', passwordResetLimiter, validatePasswordResetRequest, AuthController.requestPasswordReset);
 router.post('/reset-password', validatePasswordReset, AuthController.resetPassword);
 
 // Protected routes
 router.post('/logout', authenticateToken, AuthController.logout);
 router.get('/profile', authenticateToken, AuthController.getProfile);
-
-// Admin only routes
-router.get('/admin/users', authenticateToken, authorizeRoles('admin'), (req, res) => {
-  res.json({
-    success: true,
-    message: 'Admin endpoint - List all users',
-    data: []
-  });
-});
-
-// Teacher and Admin routes
-router.get('/teacher/dashboard', authenticateToken, authorizeRoles('teacher', 'admin'), (req, res) => {
-  res.json({
-    success: true,
-    message: 'Teacher dashboard endpoint',
-    data: {}
-  });
-});
-
-// Email verified users only
-router.get('/verified-only', authenticateToken, requireEmailVerification, (req, res) => {
-  res.json({
-    success: true,
-    message: 'This endpoint requires email verification',
-    data: {}
-  });
-});
 
 export default router;
