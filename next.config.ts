@@ -1,8 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Enable standalone build for Docker
-  output: 'standalone',
+  // Remove standalone output for Vercel deployment
+  // output: 'standalone',
   
   // Disable experimental features to avoid warnings
   experimental: {
