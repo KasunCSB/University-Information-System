@@ -5,7 +5,7 @@
   "framework": "nextjs",
   "installCommand": "npm install",
   "env": {
-    "NEXT_PUBLIC_API_URL": "@api_url"
+    "NEXT_PUBLIC_API_URL": "https://uis-backend-app.azurewebsites.net/api"
   },
   "functions": {
     "src/app/**": {
