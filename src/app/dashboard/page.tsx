@@ -244,7 +244,7 @@ export default function DashboardPage() {
   if (!mounted || isLoading) {
     return (
       <div className="min-h-screen bg-white dark:bg-gray-900">
-        <AuthenticatedHeader username={user?.username || 'User'} currentPage="Dashboard" />
+        <AuthenticatedHeader currentPage="Dashboard" />
         <main className="container-responsive pt-6 pb-12">
           <div className="animate-pulse">
             <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded mb-4 w-1/3"></div>
@@ -265,7 +265,7 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
       {/* Navigation */}
-      <AuthenticatedHeader username={user?.username || 'User'} currentPage="dashboard" />
+      <AuthenticatedHeader currentPage="dashboard" />
 
       {/* Welcome Banner */}
       <div className="bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-700 dark:to-indigo-700">

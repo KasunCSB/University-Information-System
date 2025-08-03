@@ -91,20 +91,16 @@ const assignments: Assignment[] = [
 
 export default function AssignmentsPage() {
   const router = useRouter()
-  const [username, setUsername] = useState('')
   const [filter, setFilter] = useState<'all' | 'pending' | 'submitted' | 'graded'>('all')
   const [typeFilter, setTypeFilter] = useState<'all' | 'assignment' | 'exam' | 'project' | 'quiz'>('all')
 
   useEffect(() => {
     const isAuthenticated = localStorage.getItem('isAuthenticated')
-    const user = localStorage.getItem('user')
     
     if (!isAuthenticated) {
       router.push('/login')
       return
     }
-    
-    setUsername(user || 'User')
   }, [router])
 
   const getDaysUntilDue = (dueDate: string) => {
@@ -158,7 +154,7 @@ export default function AssignmentsPage() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
-      <AuthenticatedHeader username={username} currentPage="assignments" />
+      <AuthenticatedHeader currentPage="assignments" />
       
       <div className="container-responsive py-6 sm:py-8">
         {/* Header */}

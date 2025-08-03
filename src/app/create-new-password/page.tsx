@@ -1,10 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Header from '@/components/Header'
+import ApiService from '@/lib/apiService'
 
 export default function CreateNewPasswordPage() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const [token, setToken] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     newPassword: '',
     confirmPassword: ''
@@ -12,6 +17,16 @@ export default function CreateNewPasswordPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+
+  useEffect(() => {
+    // Get token from URL parameters
+    const tokenParam = searchParams.get('token')
+    if (!tokenParam) {
+      setError('Invalid or missing reset token. Please request a new password reset.')
+      return
+    }
+    setToken(tokenParam)
+  }, [searchParams])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -28,6 +43,12 @@ export default function CreateNewPasswordPage() {
     setIsLoading(true)
     setError('')
 
+    if (!token) {
+      setError('Invalid or missing reset token.')
+      setIsLoading(false)
+      return
+    }
+
     // Validation
     if (formData.newPassword.length < 8) {
       setError('Password must be at least 8 characters long.')
@@ -41,11 +62,20 @@ export default function CreateNewPasswordPage() {
       return
     }
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false)
+    try {
+      await ApiService.resetPassword(token, formData.newPassword)
       setSuccess(true)
-    }, 2000)
+      // Redirect to login after 3 seconds
+      setTimeout(() => {
+        router.push('/login')
+      }, 3000)
+    } catch (error: unknown) {
+      console.error('Password reset error:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Failed to reset password. Please try again.'
+      setError(errorMessage)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   if (success) {

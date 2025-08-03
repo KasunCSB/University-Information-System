@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import Header from '@/components/Header'
+import ApiService from '@/lib/apiService'
 
 export default function ResetPasswordRequestPage() {
   const [email, setEmail] = useState('')
@@ -23,12 +24,16 @@ export default function ResetPasswordRequestPage() {
       return
     }
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false)
-      // Simulate success for demo
+    try {
+      await ApiService.requestPasswordReset(email)
       setSuccess(true)
-    }, 2000)
+    } catch (error: unknown) {
+      console.error('Password reset request error:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Failed to send password reset email. Please try again.'
+      setError(errorMessage)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   if (success) {
