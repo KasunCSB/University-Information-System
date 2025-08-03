@@ -1,53 +1,77 @@
-# Frontend Dockerfile for Next.js application
-FROM node:18-alpine AS base
+# Use Node.js 18 LTS as base image
+FROM node:18-alpine AS dependencies
 
-# Install dependencies only when needed
-FROM base AS deps
-RUN apk add --no-cache libc6-compat
+# Set working directory
 WORKDIR /app
 
 # Copy package files
-COPY package.json package-lock.json* ./
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci --only=production
+
+# Build stage
+FROM node:18-alpine AS builder
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install all dependencies (including dev)
 RUN npm ci
 
-# Rebuild the source code only when needed
-FROM base AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
+# Copy source code
 COPY . .
+
+# Accept build arguments
+ARG NEXT_PUBLIC_API_URL=https://uis-backend-app.azurewebsites.net/api
+ARG NODE_ENV=production
+
+# Set build-time environment variables
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NODE_ENV=$NODE_ENV
 
 # Build the application
 RUN npm run build
 
-# Production image, copy all the files and run next
-FROM base AS runner
+# Production stage
+FROM node:18-alpine AS production
+
+# Set working directory
 WORKDIR /app
 
-ENV NODE_ENV production
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S nodejs -u 1001
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+# Copy package files
+COPY package*.json ./
 
-# Copy public folder
+# Install only production dependencies
+RUN npm ci --only=production && npm cache clean --force
+
+# Copy built application from builder stage
+COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 
-# Set the correct permission for prerender cache
-RUN mkdir .next
-RUN chown nextjs:nodejs .next
+# Copy necessary config files
+COPY next.config.ts ./
+COPY --from=builder /app/package.json ./
 
-# Copy built application
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+# Change ownership of the working directory
+RUN chown -R nodejs:nodejs /app
 
-USER nextjs
+# Switch to non-root user
+USER nodejs
 
+# Expose port
 EXPOSE 3000
-
-ENV PORT 3000
-ENV HOSTNAME "0.0.0.0"
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })" || exit 1
+  CMD node -e "require('http').get('http://localhost:3000', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
 
-CMD ["node", "server.js"]
+# Start the application
+CMD ["npm", "start"]

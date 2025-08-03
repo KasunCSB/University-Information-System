@@ -1,47 +1,81 @@
 version: '3.8'
 
 services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:6.0
+    container_name: uis-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+      MONGO_INITDB_DATABASE: university_system
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./database/init:/docker-entrypoint-initdb.d:ro
+    networks:
+      - uis-network
+
   # Backend API
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    container_name: uis-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      MONGODB_URI: mongodb://admin:password123@mongodb:27017/university_system?authSource=admin
+      JWT_SECRET: your-super-secret-jwt-key-change-in-production
+      EMAIL_USER: your-email@gmail.com
+      EMAIL_PASS: your-app-password
+      FRONTEND_URL: http://localhost:3000
     ports:
       - "3001:3001"
-    environment:
-      - NODE_ENV=production
-      - PORT=3001
-      - MONGODB_URI=${MONGODB_URI}
-      - JWT_SECRET=${JWT_SECRET}
-      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
-      - SESSION_SECRET=${SESSION_SECRET}
-      - EMAIL_USER=${EMAIL_USER}
-      - EMAIL_PASS=${EMAIL_PASS}
-      - FRONTEND_URL=${FRONTEND_URL}
-      - CORS_ORIGIN=${FRONTEND_URL}
+    depends_on:
+      - mongodb
     volumes:
-      - backend_logs:/app/logs
-    restart: unless-stopped
+      - ./backend/uploads:/app/uploads
+      - ./backend/logs:/app/logs
+    networks:
+      - uis-network
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
 
   # Frontend (Next.js)
   frontend:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:3001/api
+    container_name: uis-frontend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: http://localhost:3001/api
     ports:
       - "3000:3000"
-    environment:
-      - NODE_ENV=production
-      - NEXT_PUBLIC_API_URL=http://backend:3001/api
     depends_on:
       - backend
-    restart: unless-stopped
+    networks:
+      - uis-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  uis-network:
+    driver: bridge
 
 volumes:
-  backend_logs:
+  mongodb_data:
+    driver: local

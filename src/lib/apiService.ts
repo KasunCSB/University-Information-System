@@ -7,11 +7,14 @@ const getAPIUrl = () => {
       console.error('NEXT_PUBLIC_API_URL is not set in production');
       throw new Error('API URL configuration missing');
     }
+    console.log('Using production API URL:', apiUrl);
     return apiUrl;
   }
   
-  // In development, fallback to localhost
-  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+  // In development, fallback to localhost with /api path
+  const devUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+  console.log('Using development API URL:', devUrl);
+  return devUrl;
 };
 
 const API_URL = getAPIUrl();
